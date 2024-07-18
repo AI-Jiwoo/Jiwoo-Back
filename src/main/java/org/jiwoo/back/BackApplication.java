@@ -1,13 +1,13 @@
-package org.jiwoo.miniback;
+package org.jiwoo.back;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class MiniBackApplication {
+public class BackApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(MiniBackApplication.class, args);
+		SpringApplication.run(BackApplication.class, args);
 	}
 
 }
