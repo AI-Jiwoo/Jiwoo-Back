@@ -24,6 +24,9 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
+	// SpringWeb
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+
 	// 편의성
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 
