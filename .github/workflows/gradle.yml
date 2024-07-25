@@ -30,6 +30,9 @@ jobs:
           echo "${{ secrets.DB_YML }}" | base64 --decode > src/main/resources/application.yml
           find src
 
+      - name: gradlew 권한 설정
+        run: chmod +x gradlew
+
       - name: Gradle TEST
         run: ./gradlew test
         env:
