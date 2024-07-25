@@ -33,8 +33,8 @@ jobs:
       - name: gradlew 권한 설정
         run: chmod +x gradlew
 
-      - name: Gradle TEST
-        run: ./gradlew test
+      - name: Gradle Build
+        run: ./gradlew build
         env:
           DB_URL: DB URL = ${{ secrets.DB_URL }}
           DB_USER_NAME: USER = ${{ secrets.DB_USER_NAME }}
