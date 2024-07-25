@@ -24,14 +24,14 @@ jobs:
       - name: Gradle 설정
         uses: gradle/actions/setup-gradle@v3
 
-      - name: Make application.yml
+      - name: gradlew 권한 설정
+        run: chmod +x gradlew
+
+      - name: application.yml 생성
         run: |
           mkdir -p src/main/resources
           echo "${{ secrets.DB_YML }}" | base64 --decode > src/main/resources/application.yml
           find src
-
-      - name: gradlew 권한 설정
-        run: chmod +x gradlew
 
       - name: Gradle Build
         run: ./gradlew build
