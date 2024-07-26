@@ -2,7 +2,9 @@ package org.jiwoo.back.user.aggregate.entity;
 
 import jakarta.persistence.*;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import org.jiwoo.back.user.aggregate.enums.UserRole;
 import org.jiwoo.back.user.aggregate.enums.UserRoleConverter;
 
@@ -10,6 +12,8 @@ import java.time.LocalDate;
 
 @Entity
 @NoArgsConstructor
+@Getter
+@ToString
 @Table(name = "tbl_user")
 public class User {
 
@@ -18,7 +22,7 @@ public class User {
     @Column(name = "ID")
     private int id;
 
-    @Column(name = "NAME")
+    @Column(name = "NAME", nullable = false)
     private String name;
 
     @Column(name = "EMAIL")
