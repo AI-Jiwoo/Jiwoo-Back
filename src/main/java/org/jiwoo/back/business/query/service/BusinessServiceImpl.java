@@ -31,6 +31,7 @@ public class BusinessServiceImpl implements BusinessService {
         businessDTO.setBusinessScale(business.getBusinessScale());
         businessDTO.setBusinessBudget(business.getBusinessBudget());
         businessDTO.setBusinessContent(business.getBusinessContent());
+        businessDTO.setBusinessPlatform(business.getBusinessPlatform());
         businessDTO.setBusinessLocation(business.getBusinessLocation());
         businessDTO.setBusinessStartDate(business.getBusinessStartDate());
         businessDTO.setNation(business.getNation());
