@@ -29,13 +29,17 @@ dependencies {
 
 	// 편의성
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+	implementation 'org.projectlombok:lombok'
 
-//	// Mybatis
-//	implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.3'
-//	testImplementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter-test:3.0.3'
-//
-//	// JPA
-//	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	// Database
+	runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'
+
+	// Mybatis
+	implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.3'
+	testImplementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter-test:3.0.3'
+
+	// JPA
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 }
 
 tasks.named('test') {
