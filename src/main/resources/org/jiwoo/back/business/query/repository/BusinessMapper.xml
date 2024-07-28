@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jiwoo.back.business.query.repository.BusinessMapper">
+
+    <resultMap id="BusinessMap" type="org.jiwoo.back.business.query.aggregate.entity.Business">
+        <id property="id" column="ID"/>
+        <result property="businessName" column="BUSINESS_NAME"/>
+        <result property="businessNumber" column="BUSINESS_NUMBER"/>
+        <result property="businessScale" column="BUSINESS_SCALE"/>
+        <result property="businessBudget" column="BUSINESS_BUDGET"/>
+        <result property="businessContent" column="BUSINESS_CONTENT"/>
+        <result property="businessPlatform" column="BUSINESS_PLATFORM"/>
+        <result property="businessLocation" column="BUSINESS_LOCATION"/>
+        <result property="businessStartDate" column="BUSINESS_START_DATE"/>
+        <result property="nation" column="NATION"/>
+        <result property="investmentStatus" column="INVESTMENT_STATUS"/>
+        <result property="customerType" column="CUSTOMER_TYPE"/>
+        <result property="userId" column="USER_ID"/>
+        <result property="startupStageId" column="STARTUP_STAGE_ID"/>
+    </resultMap>
+
+    <select id="findById" resultMap="BusinessMap" parameterType="int">
+        SELECT *
+        FROM tbl_business
+        WHERE ID = #{id}
+    </select>
+
+<!--    <select id="getBusinessListByUserId" parameterType="int" resultMap="BusinessMap">-->
+<!--        SELECT ID,-->
+<!--               BUSINESS_NAME,-->
+<!--               BUSINESS_NUMBER,-->
+<!--               BUSINESS_SCALE,-->
+<!--               BUSINESS_BUDGET,-->
+<!--               BUSINESS_CONTENT,-->
+<!--               BUSINESS_PLATFORM,-->
+<!--               BUSINESS_LOCATION,-->
+<!--               BUSINESS_START_DATE,-->
+<!--               NATION,-->
+<!--               INVESTMENT_STATUS,-->
+<!--               CUSTOMER_TYPE,-->
+<!--               USER_ID,-->
+<!--               STARTUP_STAGE_ID-->
+<!--          FROM tbl_business-->
+<!--         WHERE USER_ID = #{userId}-->
+<!--         ORDER BY BUSINESS_START_DATE DESC-->
+<!--    </select>-->
+
+</mapper>
