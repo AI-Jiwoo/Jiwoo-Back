@@ -1,7 +1,7 @@
-package org.jiwoo.back.business.query.aggregate.vo;
+package org.jiwoo.back.business.aggregate.vo;
 
 import lombok.*;
-import org.jiwoo.back.business.query.dto.BusinessDTO;
+import org.jiwoo.back.business.dto.BusinessDTO;
 
 import java.util.List;
 

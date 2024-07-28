@@ -1,8 +1,8 @@
-package org.jiwoo.back.business.query.service;
+package org.jiwoo.back.business.service;
 
-import org.jiwoo.back.business.query.aggregate.entity.Business;
-import org.jiwoo.back.business.query.dto.BusinessDTO;
-import org.jiwoo.back.business.query.repository.BusinessMapper;
+import org.jiwoo.back.business.aggregate.entity.Business;
+import org.jiwoo.back.business.dto.BusinessDTO;
+import org.jiwoo.back.business.repository.BusinessMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

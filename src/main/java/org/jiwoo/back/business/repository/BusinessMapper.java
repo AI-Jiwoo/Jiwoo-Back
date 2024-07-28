@@ -1,7 +1,7 @@
-package org.jiwoo.back.business.query.repository;
+package org.jiwoo.back.business.repository;
 
 import org.apache.ibatis.annotations.Mapper;
-import org.jiwoo.back.business.query.aggregate.entity.Business;
+import org.jiwoo.back.business.aggregate.entity.Business;
 
 @Mapper
 public interface BusinessMapper {

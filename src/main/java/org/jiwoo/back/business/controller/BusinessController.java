@@ -1,8 +1,8 @@
-package org.jiwoo.back.business.query.controller;
+package org.jiwoo.back.business.controller;
 
-import org.jiwoo.back.business.query.aggregate.vo.ResponseBusinessVO;
-import org.jiwoo.back.business.query.dto.BusinessDTO;
-import org.jiwoo.back.business.query.service.BusinessService;
+import org.jiwoo.back.business.aggregate.vo.ResponseBusinessVO;
+import org.jiwoo.back.business.dto.BusinessDTO;
+import org.jiwoo.back.business.service.BusinessService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

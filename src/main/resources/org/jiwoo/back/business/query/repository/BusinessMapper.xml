@@ -2,9 +2,9 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="org.jiwoo.back.business.query.repository.BusinessMapper">
+<mapper namespace="org.jiwoo.back.business.repository.BusinessMapper">
 
-    <resultMap id="BusinessMap" type="org.jiwoo.back.business.query.aggregate.entity.Business">
+    <resultMap id="BusinessMap" type="org.jiwoo.back.business.aggregate.entity.Business">
         <id property="id" column="ID"/>
         <result property="businessName" column="BUSINESS_NAME"/>
         <result property="businessNumber" column="BUSINESS_NUMBER"/>

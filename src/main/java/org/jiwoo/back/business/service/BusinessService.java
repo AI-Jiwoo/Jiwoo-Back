@@ -1,8 +1,6 @@
-package org.jiwoo.back.business.query.service;
+package org.jiwoo.back.business.service;
 
-import org.jiwoo.back.business.query.dto.BusinessDTO;
-
-import java.util.List;
+import org.jiwoo.back.business.dto.BusinessDTO;
 
 public interface BusinessService {
     BusinessDTO findBusinessById(int id);

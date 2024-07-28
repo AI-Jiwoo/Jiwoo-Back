@@ -1,4 +1,4 @@
-package org.jiwoo.back.business.query.dto;
+package org.jiwoo.back.business.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

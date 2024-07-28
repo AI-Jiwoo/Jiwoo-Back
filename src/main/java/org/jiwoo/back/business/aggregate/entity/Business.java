@@ -1,4 +1,4 @@
-package org.jiwoo.back.business.query.aggregate.entity;
+package org.jiwoo.back.business.aggregate.entity;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
