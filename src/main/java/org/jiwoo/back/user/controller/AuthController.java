@@ -3,7 +3,7 @@ package org.jiwoo.back.user.controller;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.jiwoo.back.common.exception.UserEmailDuplicateException;
-import org.jiwoo.back.user.aggregate.vo.AuthRequestVO;
+import org.jiwoo.back.user.aggregate.vo.SignupRequestVO;
 import org.jiwoo.back.user.aggregate.vo.MessageResponseVO;
 import org.jiwoo.back.user.dto.AuthDTO;
 import org.jiwoo.back.user.service.AuthService;
@@ -29,7 +29,7 @@ public class AuthController {
     }
 
     @PostMapping("/exist/email")
-    public ResponseEntity<Boolean> existEmail(@RequestBody AuthRequestVO request) {
+    public ResponseEntity<Boolean> existEmail(@RequestBody SignupRequestVO request) {
 
         if (authService.existEmail(request.getEmail())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(true);
@@ -38,7 +38,7 @@ public class AuthController {
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<MessageResponseVO> signup(@Valid @RequestBody AuthRequestVO request) {
+    public ResponseEntity<MessageResponseVO> signup(@Valid @RequestBody SignupRequestVO request) {
 
         try {
             AuthDTO userInfo = AuthDTO.builder()
