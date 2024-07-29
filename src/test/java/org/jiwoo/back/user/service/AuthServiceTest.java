@@ -1,9 +1,12 @@
 package org.jiwoo.back.user.service;
 
 import org.jiwoo.back.common.exception.NotLoggedInException;
+import org.jiwoo.back.common.exception.NotMatchedPasswordException;
 import org.jiwoo.back.common.exception.UserEmailDuplicateException;
+import org.jiwoo.back.user.aggregate.entity.User;
 import org.jiwoo.back.user.dto.AuthDTO;
 import org.jiwoo.back.user.dto.CurrentUserDTO;
+import org.jiwoo.back.user.dto.EditPasswordDTO;
 import org.jiwoo.back.user.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -13,6 +16,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
@@ -28,6 +32,8 @@ class AuthServiceTest {
 
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private BCryptPasswordEncoder bCryptPasswordEncoder;
 
     @DisplayName("회원가입 테스트")
     @Test
@@ -98,6 +104,36 @@ class AuthServiceTest {
 
         // then
         assertEquals(targetUser.toString(), authService.getCurrentUser().toString());
+    }
+
+    @DisplayName("비밀번호 변경 테스트")
+    @Test
+    void editPasswordTest() throws UserEmailDuplicateException, NotLoggedInException, NotMatchedPasswordException {
+
+        // given
+        login();
+        String newPassword = "newPassword";
+        EditPasswordDTO passwordDTO = new EditPasswordDTO("testPassword", newPassword);
+
+        // when
+        CurrentUserDTO targetUser = authService.editPassword(passwordDTO);
+
+        // then
+        User user = userRepository.findByEmail(targetUser.getEmail());
+        assertTrue(bCryptPasswordEncoder.matches(newPassword, user.getPassword()));
+    }
+
+    @DisplayName("잘못된 이전 비밀번호 변경 예외 테스트")
+    @Test
+    void editPasswordWrongBeforePasswordTest() throws UserEmailDuplicateException {
+
+        // given
+        login();
+        String newPassword = "newPassword";
+        EditPasswordDTO passwordDTO = new EditPasswordDTO("wrongPassword", newPassword);
+
+        // when, then
+        assertThrows(NotMatchedPasswordException.class, () -> authService.editPassword(passwordDTO));
     }
 
     private AuthDTO createAuthDTO() {
