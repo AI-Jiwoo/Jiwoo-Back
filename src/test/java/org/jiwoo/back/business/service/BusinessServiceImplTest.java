@@ -2,7 +2,7 @@ package org.jiwoo.back.business.service;
 
 import org.jiwoo.back.business.aggregate.entity.Business;
 import org.jiwoo.back.business.dto.BusinessDTO;
-import org.jiwoo.back.business.repository.BusinessMapper;
+import org.jiwoo.back.business.repository.BusinessRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -16,11 +16,12 @@ import static org.mockito.Mockito.*;
 import java.util.Date;
 import java.text.SimpleDateFormat;
 import java.text.ParseException;
+import java.util.Optional;
 
 class BusinessServiceImplTest {
 
     @Mock
-    private BusinessMapper businessMapper;
+    private BusinessRepository businessRepository;
 
     @InjectMocks
     private BusinessServiceImpl businessService;
@@ -37,7 +38,7 @@ class BusinessServiceImplTest {
         int businessId = 1;
         Business mockBusiness = createMockBusiness(businessId, "Test Business", 1);
 
-        when(businessMapper.findById(businessId)).thenReturn(mockBusiness);
+        when(businessRepository.findById(businessId)).thenReturn(Optional.of(mockBusiness));
 
         // When
         BusinessDTO result = businessService.findBusinessById(businessId);
@@ -60,7 +61,7 @@ class BusinessServiceImplTest {
         assertEquals(1, result.getUserId());
         assertEquals(2, result.getStartupStageId());
 
-        verify(businessMapper, times(1)).findById(businessId);
+        verify(businessRepository, times(1)).findById(businessId);
     }
 
     @DisplayName("사업 ID 없는 경우 Null 반환")
@@ -68,35 +69,35 @@ class BusinessServiceImplTest {
     void findBusinessById_NotFound() {
         // Given
         int businessId = 999;
-        when(businessMapper.findById(businessId)).thenReturn(null);
+        when(businessRepository.findById(businessId)).thenReturn(Optional.empty());
 
         // When
         BusinessDTO result = businessService.findBusinessById(businessId);
 
         // Then
         assertNull(result);
-        verify(businessMapper, times(1)).findById(businessId);
+        verify(businessRepository, times(1)).findById(businessId);
     }
 
     private Business createMockBusiness(int id, String name, int userId) throws ParseException {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         Date startDate = sdf.parse("2023-01-01");
 
-        return new Business(
-                id,
-                name,
-                "123-45-67890",
-                "중소기업",
-                1000000.0,
-                "Test content",
-                "온라인 플랫폼",
-                "서울",
-                startDate,
-                "대한민국",
-                "시드",
-                "B2C",
-                userId,
-                2
-        );
+        return Business.builder()
+                .id(id)
+                .businessName(name)
+                .businessNumber("123-45-67890")
+                .businessScale("중소기업")
+                .businessBudget(1000000.0)
+                .businessContent("Test content")
+                .businessPlatform("온라인 플랫폼")
+                .businessLocation("서울")
+                .businessStartDate(startDate)
+                .nation("대한민국")
+                .investmentStatus("시드")
+                .customerType("B2C")
+                .userId(userId)
+                .startupStageId(2)
+                .build();
     }
 }
