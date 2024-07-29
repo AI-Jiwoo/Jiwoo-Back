@@ -1,11 +1,13 @@
 package org.jiwoo.back.user.service;
 
 import org.jiwoo.back.common.exception.NotLoggedInException;
+import org.jiwoo.back.common.exception.NotMatchedPasswordException;
 import org.jiwoo.back.common.exception.UserEmailDuplicateException;
 import org.jiwoo.back.user.aggregate.entity.User;
 import org.jiwoo.back.user.aggregate.enums.UserRole;
 import org.jiwoo.back.user.dto.AuthDTO;
 import org.jiwoo.back.user.dto.CurrentUserDTO;
+import org.jiwoo.back.user.dto.EditPasswordDTO;
 import org.jiwoo.back.user.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -79,6 +81,30 @@ public class AuthServiceImpl implements AuthService {
                 .gender(user.getGender())
                 .phoneNo(user.getPhoneNo())
                 .build();
+    }
+
+    @Override
+    public CurrentUserDTO editPassword(EditPasswordDTO request) throws NotLoggedInException, NotMatchedPasswordException {
+
+        User user = getCurrentUserEntity();
+
+        if (bCryptPasswordEncoder.matches(request.getOldPassword(), user.getPassword())) {
+
+            user.updatePassword(bCryptPasswordEncoder.encode(request.getNewPassword()));
+            userRepository.save(user);
+
+            return CurrentUserDTO.builder()
+                    .id(user.getId())
+                    .name(user.getName())
+                    .email(user.getEmail())
+                    .userRole(user.getUserRole().name())
+                    .birthDate(String.valueOf(user.getBirthDate()))
+                    .gender(user.getGender())
+                    .phoneNo(user.getPhoneNo())
+                    .build();
+        }
+
+        throw new NotMatchedPasswordException();
     }
 
     private User authDtoToUser(AuthDTO request) {

@@ -58,6 +58,10 @@ public class User {
         this.phoneNo = phoneNo;
     }
 
+    public void updatePassword(String password) {
+        this.password = password;
+    }
+
     @Builder
     public User(int id, String name, String email, String password, String provider, String snsId, UserRole userRole,
                 LocalDate birthDate, String gender, String phoneNo) {
