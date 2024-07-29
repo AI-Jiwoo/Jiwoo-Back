@@ -50,6 +50,14 @@ public class User {
     @Column(name = "PHONE_NO")
     private String phoneNo;
 
+    public void updateGender(String gender) {
+        this.gender = gender;
+    }
+
+    public void updatePhoneNo(String phoneNo) {
+        this.phoneNo = phoneNo;
+    }
+
     @Builder
     public User(int id, String name, String email, String password, String provider, String snsId, UserRole userRole,
                 LocalDate birthDate, String gender, String phoneNo) {
