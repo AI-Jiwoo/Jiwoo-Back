@@ -1,11 +1,18 @@
 package org.jiwoo.back.user.service;
 
+import org.jiwoo.back.common.exception.NotLoggedInException;
 import org.jiwoo.back.common.exception.UserEmailDuplicateException;
 import org.jiwoo.back.user.dto.AuthDTO;
+import org.jiwoo.back.user.dto.CurrentUserDTO;
+import org.jiwoo.back.user.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
@@ -19,9 +26,12 @@ class AuthServiceTest {
     @Autowired
     private AuthService authService;
 
+    @Autowired
+    private UserRepository userRepository;
+
     @DisplayName("회원가입 테스트")
     @Test
-    void signUp() throws UserEmailDuplicateException {
+    void signUpTest() throws UserEmailDuplicateException {
 
         // given
         AuthDTO authDTO = createAuthDTO();
@@ -35,7 +45,7 @@ class AuthServiceTest {
 
     @DisplayName("존재하는 이메일 회원가입 예외 테스트")
     @Test
-    void duplicateEmail() throws UserEmailDuplicateException {
+    void duplicateEmailTest() throws UserEmailDuplicateException {
 
         // given
         AuthDTO authDTO = createAuthDTO();
@@ -49,7 +59,7 @@ class AuthServiceTest {
 
     @DisplayName("존재하는 이메일 조회 테스트")
     @Test
-    void existEmail() throws UserEmailDuplicateException {
+    void existEmailTest() throws UserEmailDuplicateException {
 
         // given
         AuthDTO authDTO = createAuthDTO();
@@ -63,7 +73,7 @@ class AuthServiceTest {
 
     @DisplayName("존재하지 않는 이메일 조회 테스트")
     @Test
-    void notExistEmail() {
+    void notExistEmailTest() {
 
         // given
         String email = "존재하지않는이메일@notExist.aaa";
@@ -72,14 +82,48 @@ class AuthServiceTest {
         assertFalse(authService.existEmail(email));
     }
 
+    @DisplayName("회원 정보 수정 테스트")
+    @Test
+    void editUserInfoTest() throws UserEmailDuplicateException, NotLoggedInException {
+
+        // given
+        login();
+        AuthDTO authDTO = AuthDTO.builder()
+                .gender("Female")
+                .phoneNo("010-9999-9999")
+                .build();
+
+        // when
+        CurrentUserDTO targetUser = authService.editUserInfo(authDTO);
+
+        // then
+        assertEquals(targetUser.toString(), authService.getCurrentUser().toString());
+    }
+
     private AuthDTO createAuthDTO() {
         return AuthDTO.builder()
                 .name("TestName")
-                .email("test@test.com")
+                .email("testUnique@testUnique.com")
                 .password("testPassword")
                 .birthDate(LocalDate.now())
                 .gender("Male")
                 .phoneNo("010-1234-1234")
                 .build();
+    }
+
+    private String signUp() throws UserEmailDuplicateException {
+        AuthDTO authDTO = createAuthDTO();
+        authService.signUp(authDTO);
+        return authDTO.getEmail();
+    }
+
+    private String login() throws UserEmailDuplicateException {
+        String email = signUp();
+        CustomUserDetailsService customUserDetailsService = new CustomUserDetailsService(userRepository);
+        UserDetails userDetails = customUserDetailsService.loadUserByUsername(email);
+        SecurityContext context = SecurityContextHolder.getContext();
+        context.setAuthentication(new UsernamePasswordAuthenticationToken(userDetails, userDetails.getPassword(), userDetails.getAuthorities()));
+
+        return email;
     }
 }
