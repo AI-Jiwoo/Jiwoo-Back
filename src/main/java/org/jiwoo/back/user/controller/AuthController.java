@@ -3,13 +3,12 @@ package org.jiwoo.back.user.controller;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.jiwoo.back.common.exception.NotLoggedInException;
+import org.jiwoo.back.common.exception.NotMatchedPasswordException;
 import org.jiwoo.back.common.exception.UserEmailDuplicateException;
-import org.jiwoo.back.user.aggregate.vo.CurrentUserResponseVO;
-import org.jiwoo.back.user.aggregate.vo.EditUserInfoRequestVO;
-import org.jiwoo.back.user.aggregate.vo.SignupRequestVO;
-import org.jiwoo.back.user.aggregate.vo.MessageResponseVO;
+import org.jiwoo.back.user.aggregate.vo.*;
 import org.jiwoo.back.user.dto.AuthDTO;
 import org.jiwoo.back.user.dto.CurrentUserDTO;
+import org.jiwoo.back.user.dto.EditPasswordDTO;
 import org.jiwoo.back.user.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -93,6 +92,24 @@ public class AuthController {
             log.error(e.getMessage(), e);
             response.setMessage("[ERROR] 잘못된 요청입니다.");
             return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    @PostMapping("/edit/password")
+    public ResponseEntity<MessageResponseVO> editPassword(@Valid @RequestBody EditPasswordRequestVO request) {
+
+        try {
+            CurrentUserDTO user = authService.editPassword(new EditPasswordDTO(request.getOldPassword(), request.getNewPassword()));
+
+            log.info("Edit User Password: email = {}, gender = {}, phoneNo = {}", user.getEmail(), user.getGender(), user.getPhoneNo());
+
+            return ResponseEntity.ok(new MessageResponseVO("success"));
+        } catch (NotLoggedInException | NotMatchedPasswordException e) {
+            log.error(e.getMessage(), e);
+            return ResponseEntity.badRequest().body(new MessageResponseVO(e.getMessage()));
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            return ResponseEntity.badRequest().body(new MessageResponseVO("[ERROR] 잘못된 요청입니다."));
         }
     }
 }
