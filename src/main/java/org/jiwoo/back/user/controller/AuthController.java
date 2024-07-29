@@ -112,4 +112,31 @@ public class AuthController {
             return ResponseEntity.badRequest().body(new MessageResponseVO("[ERROR] 잘못된 요청입니다."));
         }
     }
+
+    @GetMapping("/profile")
+    public ResponseEntity<CurrentUserResponseVO> getCurrentUser() {
+
+        CurrentUserResponseVO response = new CurrentUserResponseVO();
+
+        try {
+            CurrentUserDTO user = authService.getCurrentUser();
+            response.setMessage("success");
+            response.setName(user.getName());
+            response.setEmail(user.getEmail());
+            response.setUserRole(user.getUserRole());
+            response.setBirthDate(user.getBirthDate());
+            response.setGender(user.getGender());
+            response.setPhoneNo(user.getPhoneNo());
+
+            return ResponseEntity.ok(response);
+        } catch (NotLoggedInException e) {
+            log.error(e.getMessage(), e);
+            response.setMessage(e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            response.setMessage("[ERROR] 잘못된 요청입니다.");
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
 }
