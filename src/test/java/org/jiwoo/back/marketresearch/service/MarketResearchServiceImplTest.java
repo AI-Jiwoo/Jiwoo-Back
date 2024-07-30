@@ -5,6 +5,7 @@ import org.jiwoo.back.category.service.CategoryService;
 import org.jiwoo.back.common.OpenAI.service.OpenAIService;
 import org.jiwoo.back.marketresearch.dto.MarketSizeGrowthDTO;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -49,6 +50,7 @@ class MarketResearchServiceImplTest {
         MockitoAnnotations.openMocks(this);
     }
 
+    @DisplayName("사업규모와 성장률 조회 성공")
     @Test
     void getMarketSizeAndGrowth_Success() throws Exception {
         // Given
@@ -69,6 +71,7 @@ class MarketResearchServiceImplTest {
         verify(openAIService).generateAnswer(any());
     }
 
+    @DisplayName("시장 규모 정보 없을 때 성장률만 조회 성공")
     @Test
     void getMarketSizeAndGrowth_NoMarketSizeInfo() throws Exception {
         // Given
@@ -85,6 +88,7 @@ class MarketResearchServiceImplTest {
         assertEquals(EXPECTED_GROWTH_RATE_NO_MARKET_SIZE, result.getGrowthRate());
     }
 
+    @DisplayName("데이터베이스 오류 시 예외 발생 확인")
     @Test
     void getMarketSizeAndGrowth_Exception() {
         // Given
