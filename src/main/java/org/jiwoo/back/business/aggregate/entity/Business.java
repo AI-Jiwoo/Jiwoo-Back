@@ -22,43 +22,47 @@ public class Business {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    @Column(name = "BUSINESS_NAME")
+    @Column(name = "BUSINESS_NAME", nullable = false)
     private String businessName;
 
-    @Column(name = "BUSINESS_NUMBER")
+    @Column(name = "BUSINESS_NUMBER", nullable = false)
     private String businessNumber;
 
-    @Column(name = "BUSINESS_SCALE")
+    @Column(name = "BUSINESS_SCALE", nullable = false)
     private String businessScale;
 
-    @Column(name = "BUSINESS_BUDGET")
+    @Column(name = "BUSINESS_BUDGET", nullable = false)
     private double businessBudget;
 
-    @Column(name = "BUSINESS_CONTENT")
+    @Column(name = "BUSINESS_CONTENT", nullable = false)
     private String businessContent;
 
-    @Column(name = "BUSINESS_PLATFORM")
+    @Column(name = "BUSINESS_PLATFORM", nullable = false)
     private String businessPlatform;
 
     @Column(name = "BUSINESS_LOCATION")
     private String businessLocation;
 
-    @Column(name = "BUSINESS_START_DATE")
+    @Column(name = "BUSINESS_START_DATE", nullable = false)
     @Temporal(TemporalType.DATE)
     private Date businessStartDate;
 
-    @Column(name = "NATION")
+    @Column(name = "NATION", nullable = false)
     private String nation;
 
-    @Column(name = "INVESTMENT_STATUS")
+    @Column(name = "INVESTMENT_STATUS", nullable = false)
     private String investmentStatus;
 
-    @Column(name = "CUSTOMER_TYPE")
+    @Column(name = "CUSTOMER_TYPE", nullable = false)
     private String customerType;
 
     @ManyToOne
-    @JoinColumn(name = "USER_ID")
+    @JoinColumn(name = "USER_ID", nullable = false)
     private User user;
+
+    @ManyToOne
+    @JoinColumn(name = "STARTUP_STAGE_ID", nullable = false)
+    private StartupStage startupStage;
 
     @OneToMany(mappedBy = "business", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<MarketResearch> marketResearches;
@@ -66,3 +70,4 @@ public class Business {
     @OneToMany(mappedBy = "business", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<BusinessCategory> businessCategories;
 }
+

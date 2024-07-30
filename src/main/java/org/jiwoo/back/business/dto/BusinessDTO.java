@@ -26,4 +26,6 @@ public class BusinessDTO {
     private String nation;
     private String investmentStatus;
     private String customerType;
+    private int userId;
+    private int startupStageId;
 }
