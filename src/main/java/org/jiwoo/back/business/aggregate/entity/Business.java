@@ -5,7 +5,11 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import org.jiwoo.back.marketresearch.aggregate.entity.MarketResearch;
+import org.jiwoo.back.user.aggregate.entity.User;
+
 import java.util.Date;
+import java.util.List;
 
 @Entity
 @Table(name = "tbl_business")
@@ -52,9 +56,13 @@ public class Business {
     @Column(name = "CUSTOMER_TYPE")
     private String customerType;
 
-    @Column(name = "USER_ID")
-    private int userId;
+    @ManyToOne
+    @JoinColumn(name = "USER_ID")
+    private User user;
 
-    @Column(name = "STARTUP_STAGE_ID")
-    private int startupStageId;
+    @OneToMany(mappedBy = "business", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<MarketResearch> marketResearches;
+
+    @OneToMany(mappedBy = "business", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<BusinessCategory> businessCategories;
 }
