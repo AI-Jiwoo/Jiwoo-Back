@@ -2,44 +2,41 @@ package org.jiwoo.back.business.service;
 
 import org.jiwoo.back.business.aggregate.entity.Business;
 import org.jiwoo.back.business.dto.BusinessDTO;
-import org.jiwoo.back.business.repository.BusinessMapper;
+import org.jiwoo.back.business.repository.BusinessRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class BusinessServiceImpl implements BusinessService {
 
-    @Autowired
-    private final BusinessMapper businessMapper;
+    private final BusinessRepository businessRepository;
 
-    public BusinessServiceImpl(BusinessMapper businessMapper) {
-        this.businessMapper = businessMapper;
+    @Autowired
+    public BusinessServiceImpl(BusinessRepository businessRepository) {
+        this.businessRepository = businessRepository;
     }
 
     @Override
     public BusinessDTO findBusinessById(int id) {
-        Business business = businessMapper.findById(id);
+        return businessRepository.findById(id)
+                .map(this::convertToDTO)
+                .orElse(null);
+    }
 
-        if (business == null) {
-            return null;
-        }
-
-        BusinessDTO businessDTO = new BusinessDTO();
-        businessDTO.setId(business.getId());
-        businessDTO.setBusinessName(business.getBusinessName());
-        businessDTO.setBusinessNumber(business.getBusinessNumber());
-        businessDTO.setBusinessScale(business.getBusinessScale());
-        businessDTO.setBusinessBudget(business.getBusinessBudget());
-        businessDTO.setBusinessContent(business.getBusinessContent());
-        businessDTO.setBusinessPlatform(business.getBusinessPlatform());
-        businessDTO.setBusinessLocation(business.getBusinessLocation());
-        businessDTO.setBusinessStartDate(business.getBusinessStartDate());
-        businessDTO.setNation(business.getNation());
-        businessDTO.setInvestmentStatus(business.getInvestmentStatus());
-        businessDTO.setCustomerType(business.getCustomerType());
-        businessDTO.setUserId(business.getUserId());
-        businessDTO.setStartupStageId(business.getStartupStageId());
-
-        return businessDTO;
+    private BusinessDTO convertToDTO(Business business) {
+        BusinessDTO dto = new BusinessDTO();
+        dto.setId(business.getId());
+        dto.setBusinessName(business.getBusinessName());
+        dto.setBusinessNumber(business.getBusinessNumber());
+        dto.setBusinessScale(business.getBusinessScale());
+        dto.setBusinessBudget(business.getBusinessBudget());
+        dto.setBusinessContent(business.getBusinessContent());
+        dto.setBusinessPlatform(business.getBusinessPlatform());
+        dto.setBusinessLocation(business.getBusinessLocation());
+        dto.setBusinessStartDate(business.getBusinessStartDate());
+        dto.setNation(business.getNation());
+        dto.setInvestmentStatus(business.getInvestmentStatus());
+        dto.setCustomerType(business.getCustomerType());
+        return dto;
     }
 }
