@@ -27,7 +27,7 @@ public class MarketResearchServiceImpl implements MarketResearchService {
     private final CategoryService categoryService;
     private final RestTemplate restTemplate;
 
-    @Value("${python.server.url}")
+    @Value("${python.server.url.search}")
     private String pythonServerUrl;
 
     public MarketResearchServiceImpl(OpenAIService openAIService, CategoryService categoryService, @Qualifier("defaultTemplate") RestTemplate restTemplate) {
