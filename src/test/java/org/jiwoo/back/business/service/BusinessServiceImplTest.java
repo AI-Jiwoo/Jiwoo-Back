@@ -58,8 +58,6 @@ class BusinessServiceImplTest {
         assertEquals("대한민국", result.getNation());
         assertEquals("시드", result.getInvestmentStatus());
         assertEquals("B2C", result.getCustomerType());
-        assertEquals(1, result.getUserId());
-        assertEquals(2, result.getStartupStageId());
 
         verify(businessRepository, times(1)).findById(businessId);
     }
@@ -96,8 +94,6 @@ class BusinessServiceImplTest {
                 .nation("대한민국")
                 .investmentStatus("시드")
                 .customerType("B2C")
-                .userId(userId)
-                .startupStageId(2)
                 .build();
     }
 }
