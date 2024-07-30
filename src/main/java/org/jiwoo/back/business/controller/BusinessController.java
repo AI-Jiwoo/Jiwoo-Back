@@ -76,4 +76,21 @@ public class BusinessController {
                     .body(new ResponseBusinessVO("사업 정보 저장 실패: " + e.getMessage(), null));
         }
     }
+
+    /* 설명. 사용자 정보로 사업 조회 */
+    @GetMapping("/user")
+    public ResponseEntity<ResponseBusinessVO> getBusinessesByUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = authentication.getName();
+        List<BusinessDTO> businesses = businessService.findAllBusinessesByUser(userEmail);
+        return ResponseEntity.ok(new ResponseBusinessVO("사용자의 모든 사업자 정보 조회 성공", businesses));
+    }
+
+    /* 설명. 스타트업 과정 조회 */
+    @GetMapping("/startup-stages")
+    public ResponseEntity<?> getAllStartupStages() {
+        List<StartupStage> stages = startupStageRepository.findAll();
+        log.info("Available startup stages: {}", stages);
+        return ResponseEntity.ok(stages);
+    }
 }
