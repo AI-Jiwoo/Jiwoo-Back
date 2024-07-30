@@ -37,8 +37,6 @@ public class BusinessServiceImpl implements BusinessService {
         dto.setNation(business.getNation());
         dto.setInvestmentStatus(business.getInvestmentStatus());
         dto.setCustomerType(business.getCustomerType());
-        dto.setUserId(business.getUserId());
-        dto.setStartupStageId(business.getStartupStageId());
         return dto;
     }
 }

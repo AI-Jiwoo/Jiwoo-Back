@@ -20,6 +20,21 @@ import java.util.Optional;
 
 class BusinessServiceImplTest {
 
+    private static final int BUSINESS_ID = 1;
+    private static final int NON_EXISTENT_BUSINESS_ID = 999;
+    private static final String BUSINESS_NAME = "Test Business";
+    private static final String BUSINESS_NUMBER = "123-45-67890";
+    private static final String BUSINESS_SCALE = "중소기업";
+    private static final double BUSINESS_BUDGET = 1000000.0;
+    private static final String BUSINESS_CONTENT = "Test content";
+    private static final String BUSINESS_PLATFORM = "온라인 플랫폼";
+    private static final String BUSINESS_LOCATION = "서울";
+    private static final String BUSINESS_START_DATE = "2023-01-01";
+    private static final String NATION = "대한민국";
+    private static final String INVESTMENT_STATUS = "시드";
+    private static final String CUSTOMER_TYPE = "B2C";
+    private static final double DELTA = 0.001;
+
     @Mock
     private BusinessRepository businessRepository;
 
@@ -35,69 +50,63 @@ class BusinessServiceImplTest {
     @Test
     void findBusinessById() throws ParseException {
         // Given
-        int businessId = 1;
-        Business mockBusiness = createMockBusiness(businessId, "Test Business", 1);
+        Business mockBusiness = createMockBusiness(BUSINESS_ID, BUSINESS_NAME);
 
-        when(businessRepository.findById(businessId)).thenReturn(Optional.of(mockBusiness));
+        when(businessRepository.findById(BUSINESS_ID)).thenReturn(Optional.of(mockBusiness));
 
         // When
-        BusinessDTO result = businessService.findBusinessById(businessId);
+        BusinessDTO result = businessService.findBusinessById(BUSINESS_ID);
 
         // Then
         assertNotNull(result);
-        assertEquals(businessId, result.getId());
-        assertEquals("Test Business", result.getBusinessName());
-        assertEquals("123-45-67890", result.getBusinessNumber());
-        assertEquals("중소기업", result.getBusinessScale());
-        assertEquals(1000000.0, result.getBusinessBudget(), 0.001);
-        assertEquals("Test content", result.getBusinessContent());
-        assertEquals("온라인 플랫폼", result.getBusinessPlatform());
-        assertEquals("서울", result.getBusinessLocation());
+        assertEquals(BUSINESS_ID, result.getId());
+        assertEquals(BUSINESS_NAME, result.getBusinessName());
+        assertEquals(BUSINESS_NUMBER, result.getBusinessNumber());
+        assertEquals(BUSINESS_SCALE, result.getBusinessScale());
+        assertEquals(BUSINESS_BUDGET, result.getBusinessBudget(), DELTA);
+        assertEquals(BUSINESS_CONTENT, result.getBusinessContent());
+        assertEquals(BUSINESS_PLATFORM, result.getBusinessPlatform());
+        assertEquals(BUSINESS_LOCATION, result.getBusinessLocation());
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-        assertEquals("2023-01-01", sdf.format(result.getBusinessStartDate()));
-        assertEquals("대한민국", result.getNation());
-        assertEquals("시드", result.getInvestmentStatus());
-        assertEquals("B2C", result.getCustomerType());
-        assertEquals(1, result.getUserId());
-        assertEquals(2, result.getStartupStageId());
+        assertEquals(BUSINESS_START_DATE, sdf.format(result.getBusinessStartDate()));
+        assertEquals(NATION, result.getNation());
+        assertEquals(INVESTMENT_STATUS, result.getInvestmentStatus());
+        assertEquals(CUSTOMER_TYPE, result.getCustomerType());
 
-        verify(businessRepository, times(1)).findById(businessId);
+        verify(businessRepository, times(1)).findById(BUSINESS_ID);
     }
 
     @DisplayName("사업 ID 없는 경우 Null 반환")
     @Test
     void findBusinessById_NotFound() {
         // Given
-        int businessId = 999;
-        when(businessRepository.findById(businessId)).thenReturn(Optional.empty());
+        when(businessRepository.findById(NON_EXISTENT_BUSINESS_ID)).thenReturn(Optional.empty());
 
         // When
-        BusinessDTO result = businessService.findBusinessById(businessId);
+        BusinessDTO result = businessService.findBusinessById(NON_EXISTENT_BUSINESS_ID);
 
         // Then
         assertNull(result);
-        verify(businessRepository, times(1)).findById(businessId);
+        verify(businessRepository, times(1)).findById(NON_EXISTENT_BUSINESS_ID);
     }
 
-    private Business createMockBusiness(int id, String name, int userId) throws ParseException {
+    private Business createMockBusiness(int id, String name) throws ParseException {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-        Date startDate = sdf.parse("2023-01-01");
+        Date startDate = sdf.parse(BUSINESS_START_DATE);
 
         return Business.builder()
                 .id(id)
                 .businessName(name)
-                .businessNumber("123-45-67890")
-                .businessScale("중소기업")
-                .businessBudget(1000000.0)
-                .businessContent("Test content")
-                .businessPlatform("온라인 플랫폼")
-                .businessLocation("서울")
+                .businessNumber(BUSINESS_NUMBER)
+                .businessScale(BUSINESS_SCALE)
+                .businessBudget(BUSINESS_BUDGET)
+                .businessContent(BUSINESS_CONTENT)
+                .businessPlatform(BUSINESS_PLATFORM)
+                .businessLocation(BUSINESS_LOCATION)
                 .businessStartDate(startDate)
-                .nation("대한민국")
-                .investmentStatus("시드")
-                .customerType("B2C")
-                .userId(userId)
-                .startupStageId(2)
+                .nation(NATION)
+                .investmentStatus(INVESTMENT_STATUS)
+                .customerType(CUSTOMER_TYPE)
                 .build();
     }
 }
