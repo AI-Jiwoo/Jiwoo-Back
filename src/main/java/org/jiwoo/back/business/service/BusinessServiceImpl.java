@@ -1,20 +1,38 @@
 package org.jiwoo.back.business.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.jiwoo.back.business.aggregate.entity.Business;
+import org.jiwoo.back.business.aggregate.entity.StartupStage;
 import org.jiwoo.back.business.dto.BusinessDTO;
 import org.jiwoo.back.business.repository.BusinessRepository;
+import org.jiwoo.back.business.repository.StartupStageRepository;
+import org.jiwoo.back.user.aggregate.entity.User;
+import org.jiwoo.back.user.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class BusinessServiceImpl implements BusinessService {
 
     private final BusinessRepository businessRepository;
+    private final UserRepository userRepository;
+    private final StartupStageRepository startupStageRepository;
 
     @Autowired
-    public BusinessServiceImpl(BusinessRepository businessRepository) {
+    public BusinessServiceImpl(BusinessRepository businessRepository,
+                               UserRepository userRepository,
+                               StartupStageRepository startupStageRepository) {
         this.businessRepository = businessRepository;
+        this.userRepository = userRepository;
+        this.startupStageRepository = startupStageRepository;
     }
+
 
     @Override
     public BusinessDTO findBusinessById(int id) {
@@ -23,20 +41,55 @@ public class BusinessServiceImpl implements BusinessService {
                 .orElse(null);
     }
 
+    @Override
+    @Transactional
+    public BusinessDTO saveBusiness(BusinessDTO businessDTO, String userEmail) {
+        User user = userRepository.findByEmail(userEmail);
+        Optional<StartupStage> startupStageOptional = startupStageRepository.findById(businessDTO.getStartupStageId());
+
+        if (user == null || startupStageOptional.isEmpty()) {
+            throw new IllegalArgumentException("User or StartupStage not found");
+        }
+
+        StartupStage startupStage = startupStageOptional.get();
+
+        Business business = Business.builder()
+                .businessName(businessDTO.getBusinessName())
+                .businessNumber(businessDTO.getBusinessNumber())
+                .businessScale(businessDTO.getBusinessScale())
+                .businessBudget(businessDTO.getBusinessBudget())
+                .businessContent(businessDTO.getBusinessContent())
+                .businessPlatform(businessDTO.getBusinessPlatform())
+                .businessLocation(businessDTO.getBusinessLocation())
+                .businessStartDate(businessDTO.getBusinessStartDate())
+                .nation(businessDTO.getNation())
+                .investmentStatus(businessDTO.getInvestmentStatus())
+                .customerType(businessDTO.getCustomerType())
+                .user(user)  // 이 부분이 중요합니다
+                .startupStage(startupStage)
+                .build();
+
+        Business savedBusiness = businessRepository.save(business);
+
+        return convertToDTO(savedBusiness);
+    }
+
     private BusinessDTO convertToDTO(Business business) {
-        BusinessDTO dto = new BusinessDTO();
-        dto.setId(business.getId());
-        dto.setBusinessName(business.getBusinessName());
-        dto.setBusinessNumber(business.getBusinessNumber());
-        dto.setBusinessScale(business.getBusinessScale());
-        dto.setBusinessBudget(business.getBusinessBudget());
-        dto.setBusinessContent(business.getBusinessContent());
-        dto.setBusinessPlatform(business.getBusinessPlatform());
-        dto.setBusinessLocation(business.getBusinessLocation());
-        dto.setBusinessStartDate(business.getBusinessStartDate());
-        dto.setNation(business.getNation());
-        dto.setInvestmentStatus(business.getInvestmentStatus());
-        dto.setCustomerType(business.getCustomerType());
-        return dto;
+        return new BusinessDTO(
+                business.getId(),
+                business.getBusinessName(),
+                business.getBusinessNumber(),
+                business.getBusinessScale(),
+                business.getBusinessBudget(),
+                business.getBusinessContent(),
+                business.getBusinessPlatform(),
+                business.getBusinessLocation(),
+                business.getBusinessStartDate(),
+                business.getNation(),
+                business.getInvestmentStatus(),
+                business.getCustomerType(),
+                business.getUser().getId(),
+                business.getStartupStage().getId()
+        );
     }
 }
