@@ -1,6 +1,6 @@
 package org.jiwoo.back.marketresearch.service;
 
-import org.jiwoo.back.marketresearch.aggregate.vo.ResponsePythonServer;
+import org.jiwoo.back.marketresearch.aggregate.vo.ResponsePythonServerVO;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -106,7 +106,7 @@ public class MarketResearchServiceImpl implements MarketResearchService {
     public SimilarServicesAnalysisDTO analyzeSimilarServices(BusinessDTO businessDTO) {
         try {
             String categoryNames = categoryService.getCategoryNameByBusinessId(businessDTO.getId());
-            List<ResponsePythonServer> similarServices = getSimilarServicesFromPythonServer(businessDTO);
+            List<ResponsePythonServerVO> similarServices = getSimilarServicesFromPythonServer(businessDTO);
 
             String analysis = analyzeWithOpenAI(businessDTO, similarServices, categoryNames);
             return new SimilarServicesAnalysisDTO(convertToStringList(similarServices), analysis);
@@ -116,7 +116,7 @@ public class MarketResearchServiceImpl implements MarketResearchService {
         }
     }
 
-    private List<ResponsePythonServer> getSimilarServicesFromPythonServer(BusinessDTO businessDTO) {
+    private List<ResponsePythonServerVO> getSimilarServicesFromPythonServer(BusinessDTO businessDTO) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
@@ -128,13 +128,13 @@ public class MarketResearchServiceImpl implements MarketResearchService {
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(requestBody, headers);
 
         try {
-            ResponseEntity<List<ResponsePythonServer>> response = restTemplate.exchange(
+            ResponseEntity<List<ResponsePythonServerVO>> response = restTemplate.exchange(
                     pythonServerUrl,
                     HttpMethod.POST,
                     request,
-                    new ParameterizedTypeReference<List<ResponsePythonServer>>() {}
+                    new ParameterizedTypeReference<List<ResponsePythonServerVO>>() {}
             );
-            List<ResponsePythonServer> body = response.getBody();
+            List<ResponsePythonServerVO> body = response.getBody();
             log.debug("Response from Python server: {}", body);
             return body != null ? body : Collections.emptyList();
         } catch (HttpClientErrorException e) {
@@ -171,13 +171,13 @@ public class MarketResearchServiceImpl implements MarketResearchService {
         }
     }
 
-    private String analyzeWithOpenAI(BusinessDTO businessDTO, List<ResponsePythonServer> similarServices, String categoryNames) throws Exception {
+    private String analyzeWithOpenAI(BusinessDTO businessDTO, List<ResponsePythonServerVO> similarServices, String categoryNames) throws Exception {
         String prompt = createSimilarServicesPrompt(businessDTO, similarServices, categoryNames);
         log.info("Generated prompt: {}", prompt);
         return openAIService.generateAnswer(prompt);
     }
 
-    private String createSimilarServicesPrompt(BusinessDTO businessDTO, List<ResponsePythonServer> similarServices, String categoryNames) {
+    private String createSimilarServicesPrompt(BusinessDTO businessDTO, List<ResponsePythonServerVO> similarServices, String categoryNames) {
         String similarServicesString = convertToString(similarServices);
         return String.format(
                 "유사 서비스를 제공하는 기업들을 분석해주세요(강점, 약점, 특징, 전략):\n" +
@@ -190,13 +190,13 @@ public class MarketResearchServiceImpl implements MarketResearchService {
         );
     }
 
-    private String convertToString(List<ResponsePythonServer> similarServices) {
+    private String convertToString(List<ResponsePythonServerVO> similarServices) {
         return similarServices.stream()
                 .map(service -> String.format("%s (유사도: %.2f)", service.getBusinessName(), service.getSimilarityScore()))
                 .collect(Collectors.joining(", "));
     }
 
-    private List<String> convertToStringList(List<ResponsePythonServer> similarServices) {
+    private List<String> convertToStringList(List<ResponsePythonServerVO> similarServices) {
         return similarServices.stream()
                 .map(service -> String.format("%s (유사도: %.2f)", service.getBusinessName(), service.getSimilarityScore()))
                 .collect(Collectors.toList());
