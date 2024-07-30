@@ -7,4 +7,5 @@ import java.util.List;
 public interface BusinessService {
     BusinessDTO findBusinessById(int id);
     BusinessDTO saveBusiness(BusinessDTO businessDTO, String userEmail);
+    List<BusinessDTO> findAllBusinessesByUser(String userEmail);
 }

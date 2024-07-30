@@ -74,6 +74,20 @@ public class BusinessServiceImpl implements BusinessService {
         return convertToDTO(savedBusiness);
     }
 
+
+    @Override
+    public List<BusinessDTO> findAllBusinessesByUser(String userEmail) {
+        User user = userRepository.findByEmail(userEmail);
+        if (user == null) {
+            throw new RuntimeException("사용자를 찾을 수 없습니다.");
+        }
+
+        List<Business> businesses = businessRepository.findAllByUser(user);
+        return businesses.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
     private BusinessDTO convertToDTO(Business business) {
         return new BusinessDTO(
                 business.getId(),
