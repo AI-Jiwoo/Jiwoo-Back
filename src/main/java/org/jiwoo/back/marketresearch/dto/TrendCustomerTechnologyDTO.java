@@ -10,6 +10,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class TrendCustomerTechnologyDTO {
+    private int businessId;
     private String trend;
     private String mainCustomers;
     private String technologyTrend;

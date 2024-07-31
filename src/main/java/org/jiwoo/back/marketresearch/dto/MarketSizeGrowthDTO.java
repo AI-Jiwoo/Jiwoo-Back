@@ -10,6 +10,7 @@ import lombok.AllArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class MarketSizeGrowthDTO {
+    private int businessId;
     private String marketSize;
     private String growthRate;
 }

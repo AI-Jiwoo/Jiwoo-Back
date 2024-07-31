@@ -12,6 +12,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SimilarServicesAnalysisDTO {
+    private int businessId;
     private List<String> similarServices;
     private String analysis;
 }
