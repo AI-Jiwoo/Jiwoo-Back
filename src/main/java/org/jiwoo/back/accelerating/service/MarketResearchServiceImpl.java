@@ -1,18 +1,18 @@
-package org.jiwoo.back.marketresearch.service;
+package org.jiwoo.back.accelerating.service;
 
 import jakarta.transaction.Transactional;
-import org.jiwoo.back.marketresearch.aggregate.vo.ResponsePythonServerVO;
-import org.jiwoo.back.marketresearch.dto.MarketResearchHistoryDTO;
-import org.jiwoo.back.marketresearch.dto.TrendCustomerTechnologyDTO;
+import org.jiwoo.back.accelerating.aggregate.vo.ResponsePythonServerVO;
+import org.jiwoo.back.accelerating.dto.MarketResearchHistoryDTO;
+import org.jiwoo.back.accelerating.dto.TrendCustomerTechnologyDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.jiwoo.back.business.dto.BusinessDTO;
 import org.jiwoo.back.category.service.CategoryService;
-import org.jiwoo.back.marketresearch.dto.MarketSizeGrowthDTO;
+import org.jiwoo.back.accelerating.dto.MarketSizeGrowthDTO;
 import org.jiwoo.back.common.OpenAI.service.OpenAIService;
-import org.jiwoo.back.marketresearch.dto.SimilarServicesAnalysisDTO;
+import org.jiwoo.back.accelerating.dto.SimilarServicesAnalysisDTO;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -20,7 +20,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
-import java.security.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;

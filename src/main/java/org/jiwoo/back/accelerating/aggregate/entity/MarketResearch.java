@@ -1,4 +1,4 @@
-package org.jiwoo.back.marketresearch.aggregate.entity;
+package org.jiwoo.back.accelerating.aggregate.entity;
 
 import jakarta.persistence.*;
 import lombok.Builder;

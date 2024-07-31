@@ -1,10 +1,10 @@
-package org.jiwoo.back.marketresearch.aggregate.vo;
+package org.jiwoo.back.accelerating.aggregate.vo;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.jiwoo.back.marketresearch.dto.TrendCustomerTechnologyDTO;
+import org.jiwoo.back.accelerating.dto.TrendCustomerTechnologyDTO;
 
 @Getter
 @Setter

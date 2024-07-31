@@ -1,13 +1,10 @@
-package org.jiwoo.back.marketresearch.controller;
+package org.jiwoo.back.accelerating.controller;
 
-import org.jiwoo.back.marketresearch.aggregate.vo.ResponseSimilarVO;
-import org.jiwoo.back.marketresearch.aggregate.vo.ResponseTrendCustomerTechnologyVO;
-import org.jiwoo.back.marketresearch.dto.MarketResearchHistoryDTO;
-import org.jiwoo.back.marketresearch.dto.SimilarServicesAnalysisDTO;
-import org.jiwoo.back.marketresearch.dto.TrendCustomerTechnologyDTO;
-import org.jiwoo.back.marketresearch.service.MarketResearchService;
-import org.jiwoo.back.marketresearch.dto.MarketSizeGrowthDTO;
-import org.jiwoo.back.marketresearch.aggregate.vo.ResponseMarketResearchVO;
+import org.jiwoo.back.accelerating.aggregate.vo.ResponseSimilarVO;
+import org.jiwoo.back.accelerating.aggregate.vo.ResponseTrendCustomerTechnologyVO;
+import org.jiwoo.back.accelerating.dto.MarketResearchHistoryDTO;
+import org.jiwoo.back.accelerating.service.MarketResearchService;
+import org.jiwoo.back.accelerating.aggregate.vo.ResponseMarketResearchVO;
 import org.jiwoo.back.business.dto.BusinessDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -44,6 +41,7 @@ public class MarketResearchController {
         return executeMarketResearch(businessDTO, marketResearchService::getTrendCustomerTechnology, ResponseTrendCustomerTechnologyVO::new);
     }
 
+    /* 설명. 요청 응답 처리 메소드 */
     private <T, R> ResponseEntity<?> executeMarketResearch(BusinessDTO businessDTO,
                                                            Function<BusinessDTO, T> serviceMethod,
                                                            BiFunction<String, T, R> responseConstructor) {
