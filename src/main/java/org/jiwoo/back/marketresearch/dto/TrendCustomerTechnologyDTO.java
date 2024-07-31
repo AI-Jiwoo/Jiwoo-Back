@@ -5,14 +5,13 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.List;
-
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class SimilarServicesAnalysisDTO {
+public class TrendCustomerTechnologyDTO {
     private int businessId;
-    private List<String> similarServices;
-    private String analysis;
+    private String trend;
+    private String mainCustomers;
+    private String technologyTrend;
 }

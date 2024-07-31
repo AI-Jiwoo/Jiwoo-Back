@@ -8,6 +8,7 @@ import org.jiwoo.back.marketresearch.aggregate.vo.ResponsePythonServerVO;
 import org.jiwoo.back.marketresearch.dto.BusinessInfoDTO;
 import org.jiwoo.back.marketresearch.dto.MarketSizeGrowthDTO;
 import org.jiwoo.back.marketresearch.dto.SimilarServicesAnalysisDTO;
+import org.jiwoo.back.marketresearch.dto.TrendCustomerTechnologyDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -59,6 +60,11 @@ class MarketResearchServiceImplTest {
     private static final String SIMILAR_SERVICE_2 = "유사 서비스 2";
     private static final double SIMILARITY_SCORE_1 = 0.8;
     private static final double SIMILARITY_SCORE_2 = 0.7;
+
+    // 트렌드 및 주요고객 조회
+    private static final String MOCK_TREND_RESPONSE = "트렌드: AI 기술의 발전으로 데이터 분석 시장이 급성장하고 있습니다.\n" +
+            "주요 고객: 20-40대 젊은 전문직 종사자들이 주요 고객층입니다.\n" +
+            "기술 동향: 머신러닝과 딥러닝 기술이 지속적으로 발전하고 있습니다.";
 
     @Mock
     private OpenAIService openAIService;
@@ -229,6 +235,64 @@ class MarketResearchServiceImplTest {
 
         // Then
         assertNull(formattedDate);
+    }
+
+    @DisplayName("트렌드, 주요 고객, 기술 동향 조회 성공")
+    @Test
+    void getTrendCustomerTechnology_Success() throws OpenAIResponseFailException {
+        // Given
+        BusinessDTO businessDTO = createBusinessDTO(BUSINESS_ID_1);
+
+        when(categoryService.getCategoryNameByBusinessId(BUSINESS_ID_1)).thenReturn(CATEGORY_NAMES);
+        when(openAIService.generateAnswer(any())).thenReturn(MOCK_TREND_RESPONSE);
+
+        // When
+        TrendCustomerTechnologyDTO result = marketResearchService.getTrendCustomerTechnology(businessDTO);
+
+        // Then
+        assertNotNull(result);
+        assertEquals("AI 기술의 발전으로 데이터 분석 시장이 급성장하고 있습니다.", result.getTrend());
+        assertEquals("20-40대 젊은 전문직 종사자들이 주요 고객층입니다.", result.getMainCustomers());
+        assertEquals("머신러닝과 딥러닝 기술이 지속적으로 발전하고 있습니다.", result.getTechnologyTrend());
+
+        verify(categoryService).getCategoryNameByBusinessId(BUSINESS_ID_1);
+        verify(openAIService).generateAnswer(any());
+    }
+
+    @DisplayName("트렌드, 주요 고객, 기술 동향 조회 - 빈 응답")
+    @Test
+    void getTrendCustomerTechnology_EmptyResponse() throws OpenAIResponseFailException {
+        // Given
+        BusinessDTO businessDTO = createBusinessDTO(BUSINESS_ID_2);
+
+        when(categoryService.getCategoryNameByBusinessId(BUSINESS_ID_2)).thenReturn(CATEGORY_NAMES);
+        when(openAIService.generateAnswer(any())).thenReturn("");
+
+        // When
+        TrendCustomerTechnologyDTO result = marketResearchService.getTrendCustomerTechnology(businessDTO);
+
+        // Then
+        assertNotNull(result);
+        assertEquals(NO_INFO, result.getTrend());
+        assertEquals(NO_INFO, result.getMainCustomers());
+        assertEquals(NO_INFO, result.getTechnologyTrend());
+
+        verify(categoryService).getCategoryNameByBusinessId(BUSINESS_ID_2);
+        verify(openAIService).generateAnswer(any());
+    }
+
+    @DisplayName("트렌드, 주요 고객, 기술 동향 조회 - 예외 발생")
+    @Test
+    void getTrendCustomerTechnology_Exception() {
+        // Given
+        BusinessDTO businessDTO = createBusinessDTO(BUSINESS_ID_3);
+
+        when(categoryService.getCategoryNameByBusinessId(BUSINESS_ID_3)).thenThrow(new RuntimeException(DATABASE_ERROR));
+
+        // When & Then
+        assertThrows(RuntimeException.class, () -> marketResearchService.getTrendCustomerTechnology(businessDTO));
+
+        verify(categoryService).getCategoryNameByBusinessId(BUSINESS_ID_3);
     }
 
 }

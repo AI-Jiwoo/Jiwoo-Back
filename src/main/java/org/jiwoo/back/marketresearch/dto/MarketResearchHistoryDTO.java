@@ -5,14 +5,15 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.List;
-
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class SimilarServicesAnalysisDTO {
+public class MarketResearchHistoryDTO {
+    private String marketInformation;
+    private String competitorAnalysis;
+    private String marketTrends;
+    private String regulationInformation;
+    private String marketEntryStrategy;
     private int businessId;
-    private List<String> similarServices;
-    private String analysis;
 }
