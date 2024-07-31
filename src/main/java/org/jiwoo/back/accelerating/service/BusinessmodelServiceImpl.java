@@ -38,15 +38,15 @@ public class BusinessmodelServiceImpl implements BusinessmodelService {
 
     @Override
     public ResponseEntity<List<ResponsePythonServerVO>> getSimilarServices(BusinessDTO businessDTO) {
-        String categoryNames = categoryService.getCategoryNameByBusinessId(businessDTO.getId());
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-
-        Map<String, Object> requestBody = createRequestBody(businessDTO);
-
-        HttpEntity<Map<String, Object>> request = new HttpEntity<>(requestBody, headers);
-
         try {
+            String categoryNames = categoryService.getCategoryNameByBusinessId(businessDTO.getId());
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            Map<String, Object> requestBody = createRequestBody(businessDTO);
+
+            HttpEntity<Map<String, Object>> request = new HttpEntity<>(requestBody, headers);
+
             ResponseEntity<List<ResponsePythonServerVO>> response = restTemplate.exchange(
                     pythonServerUrl,
                     HttpMethod.POST,
