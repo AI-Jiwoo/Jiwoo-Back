@@ -1,0 +1,16 @@
+package org.jiwoo.back.marketresearch.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+public class TrendCustomerTechnologyDTO {
+    private String trend;
+    private String mainCustomers;
+    private String technologyTrend;
+}
