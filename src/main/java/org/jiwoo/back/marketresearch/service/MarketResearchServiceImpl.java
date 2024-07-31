@@ -1,7 +1,10 @@
 package org.jiwoo.back.marketresearch.service;
 
+import jakarta.transaction.Transactional;
 import org.jiwoo.back.marketresearch.aggregate.vo.ResponsePythonServerVO;
+import org.jiwoo.back.marketresearch.dto.MarketResearchHistoryDTO;
 import org.jiwoo.back.marketresearch.dto.TrendCustomerTechnologyDTO;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -12,10 +15,12 @@ import org.jiwoo.back.common.OpenAI.service.OpenAIService;
 import org.jiwoo.back.marketresearch.dto.SimilarServicesAnalysisDTO;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import java.security.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -30,6 +35,9 @@ public class MarketResearchServiceImpl implements MarketResearchService {
 
     @Value("${python.server.url.search}")
     private String pythonServerUrl;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     public MarketResearchServiceImpl(OpenAIService openAIService, CategoryService categoryService, @Qualifier("defaultTemplate") RestTemplate restTemplate) {
         this.openAIService = openAIService;
@@ -48,7 +56,7 @@ public class MarketResearchServiceImpl implements MarketResearchService {
             String response = openAIService.generateAnswer(prompt);
             log.info("Received response from OpenAI: {}", response);
 
-            return parseResponse(response);
+            return parseResponse(businessDTO.getId(), response);
         } catch (Exception e) {
             log.error("Error in getMarketSizeAndGrowth", e);
             throw new RuntimeException("Failed to get market size and growth data: " + e.getMessage(), e);
@@ -81,7 +89,7 @@ public class MarketResearchServiceImpl implements MarketResearchService {
         );
     }
 
-    private MarketSizeGrowthDTO parseResponse(String response) {
+    private MarketSizeGrowthDTO parseResponse(int businessId, String response) {
         log.info("Parsing response: {}", response);
         String marketSize = "정보 없음";
         String growthRate = "정보 없음";
@@ -99,7 +107,7 @@ public class MarketResearchServiceImpl implements MarketResearchService {
             growthRate = response.substring(growthRateStart + 4).trim();
         }
 
-        return new MarketSizeGrowthDTO(marketSize, growthRate);
+        return new MarketSizeGrowthDTO(businessId, marketSize, growthRate);
     }
 
     /* 설명. 유사 서비스 분석 조회 */
@@ -110,7 +118,7 @@ public class MarketResearchServiceImpl implements MarketResearchService {
             List<ResponsePythonServerVO> similarServices = getSimilarServicesFromPythonServer(businessDTO);
 
             String analysis = analyzeWithOpenAI(businessDTO, similarServices, categoryNames);
-            return new SimilarServicesAnalysisDTO(convertToStringList(similarServices), analysis);
+            return new SimilarServicesAnalysisDTO(businessDTO.getId(), convertToStringList(similarServices), analysis);
         } catch (Exception e) {
             log.error("Error in analyzeSimilarServices", e);
             throw new RuntimeException("Failed to analyze similar services: " + e.getMessage(), e);
@@ -214,7 +222,7 @@ public class MarketResearchServiceImpl implements MarketResearchService {
             String response = openAIService.generateAnswer(prompt);
             log.info("Received response from OpenAI for trend, customer, technology: {}", response);
 
-            return parseTrendCustomerTechnologyResponse(response);
+            return parseTrendCustomerTechnologyResponse(businessDTO.getId(), response);
         } catch (Exception e) {
             log.error("Error in getTrendCustomerTechnology", e);
             throw new RuntimeException("Failed to get trend, customer distribution, and technology trend data: " + e.getMessage(), e);
@@ -247,7 +255,7 @@ public class MarketResearchServiceImpl implements MarketResearchService {
         );
     }
 
-    private TrendCustomerTechnologyDTO parseTrendCustomerTechnologyResponse(String response) {
+    private TrendCustomerTechnologyDTO parseTrendCustomerTechnologyResponse(int businessId, String response) {
         log.info("Parsing response for trend, customer, technology: {}", response);
         String trend = "정보 없음";
         String mainCustomers = "정보 없음";
@@ -264,7 +272,33 @@ public class MarketResearchServiceImpl implements MarketResearchService {
             }
         }
 
-        return new TrendCustomerTechnologyDTO(trend, mainCustomers, technologyTrend);
+        return new TrendCustomerTechnologyDTO(businessId, trend, mainCustomers, technologyTrend);
     }
 
+    /* 설명. 시장 조회 이력 저장 */
+    @Override
+    @Transactional
+    public void saveMarketResearchHistory(MarketResearchHistoryDTO historyDTO) {
+        if (historyDTO.getBusinessId() <= 0) {
+            throw new IllegalArgumentException("Invalid Business ID: " + historyDTO.getBusinessId());
+        }
+
+        // BUSINESS_ID가 tbl_business 테이블에 존재하는지 확인
+        String checkSql = "SELECT COUNT(*) FROM tbl_business WHERE ID = ?";
+        int count = jdbcTemplate.queryForObject(checkSql, Integer.class, historyDTO.getBusinessId());
+        if (count == 0) {
+            throw new IllegalArgumentException("Business with ID " + historyDTO.getBusinessId() + " does not exist");
+        }
+
+        String sql = "INSERT INTO tbl_market_research (CREATED_AT, MARKET_INFORMATION, COMPETITOR_ANALYSIS, MARKET_TRENDS, REGULATION_INFORMATION, MARKET_ENTITY_STRATEGY, BUSINESS_ID) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        jdbcTemplate.update(sql,
+                new java.sql.Date(System.currentTimeMillis()),
+                historyDTO.getMarketInformation(),
+                historyDTO.getCompetitorAnalysis(),
+                historyDTO.getMarketTrends(),
+                historyDTO.getRegulationInformation(),
+                historyDTO.getMarketEntryStrategy(),
+                historyDTO.getBusinessId()
+        );
+    }
 }
