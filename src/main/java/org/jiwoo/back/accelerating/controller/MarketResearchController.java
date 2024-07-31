@@ -41,6 +41,7 @@ public class MarketResearchController {
         return executeMarketResearch(businessDTO, marketResearchService::getTrendCustomerTechnology, ResponseTrendCustomerTechnologyVO::new);
     }
 
+    /* 설명. 요청 응답 처리 메소드 */
     private <T, R> ResponseEntity<?> executeMarketResearch(BusinessDTO businessDTO,
                                                            Function<BusinessDTO, T> serviceMethod,
                                                            BiFunction<String, T, R> responseConstructor) {
