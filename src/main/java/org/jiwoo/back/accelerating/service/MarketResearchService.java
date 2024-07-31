@@ -1,10 +1,10 @@
-package org.jiwoo.back.marketresearch.service;
+package org.jiwoo.back.accelerating.service;
 
 import org.jiwoo.back.business.dto.BusinessDTO;
-import org.jiwoo.back.marketresearch.dto.MarketResearchHistoryDTO;
-import org.jiwoo.back.marketresearch.dto.MarketSizeGrowthDTO;
-import org.jiwoo.back.marketresearch.dto.SimilarServicesAnalysisDTO;
-import org.jiwoo.back.marketresearch.dto.TrendCustomerTechnologyDTO;
+import org.jiwoo.back.accelerating.dto.MarketResearchHistoryDTO;
+import org.jiwoo.back.accelerating.dto.MarketSizeGrowthDTO;
+import org.jiwoo.back.accelerating.dto.SimilarServicesAnalysisDTO;
+import org.jiwoo.back.accelerating.dto.TrendCustomerTechnologyDTO;
 
 public interface MarketResearchService {
     MarketSizeGrowthDTO getMarketSizeAndGrowth(BusinessDTO businessDTO);

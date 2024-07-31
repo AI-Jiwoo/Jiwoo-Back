@@ -1,4 +1,4 @@
-package org.jiwoo.back.marketresearch.dto;
+package org.jiwoo.back.accelerating.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;

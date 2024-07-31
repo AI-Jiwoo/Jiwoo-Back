@@ -5,7 +5,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
-import org.jiwoo.back.marketresearch.aggregate.entity.MarketResearch;
+import org.jiwoo.back.accelerating.aggregate.entity.MarketResearch;
 import org.jiwoo.back.user.aggregate.entity.User;
 
 import java.util.Date;

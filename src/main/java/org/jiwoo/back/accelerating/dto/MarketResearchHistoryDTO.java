@@ -1,4 +1,4 @@
-package org.jiwoo.back.marketresearch.dto;
+package org.jiwoo.back.accelerating.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
