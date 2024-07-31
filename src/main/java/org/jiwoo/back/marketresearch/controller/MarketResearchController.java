@@ -1,5 +1,7 @@
 package org.jiwoo.back.marketresearch.controller;
 
+import org.jiwoo.back.marketresearch.aggregate.vo.ResponseSimilarVO;
+import org.jiwoo.back.marketresearch.dto.SimilarServicesAnalysisDTO;
 import org.jiwoo.back.marketresearch.service.MarketResearchService;
 import org.jiwoo.back.marketresearch.dto.MarketSizeGrowthDTO;
 import org.jiwoo.back.marketresearch.aggregate.vo.ResponseMarketResearchVO;
@@ -26,6 +28,19 @@ public class MarketResearchController {
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
             ResponseMarketResearchVO errorResponse = new ResponseMarketResearchVO("조회 실패: " + e.getMessage(), null);
+            return ResponseEntity.badRequest().body(errorResponse);
+        }
+    }
+
+    /* 설명. 유사 서비스 분석 조회 */
+    @PostMapping("/similar-services-analysis")
+    public ResponseEntity<ResponseSimilarVO> getSimilarServicesAnalysis(@RequestBody BusinessDTO businessDTO) {
+        try {
+            SimilarServicesAnalysisDTO result = marketResearchService.analyzeSimilarServices(businessDTO);
+            ResponseSimilarVO response = new ResponseSimilarVO("분석 성공", result);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            ResponseSimilarVO errorResponse = new ResponseSimilarVO("분석 실패: " + e.getMessage(), null);
             return ResponseEntity.badRequest().body(errorResponse);
         }
     }
