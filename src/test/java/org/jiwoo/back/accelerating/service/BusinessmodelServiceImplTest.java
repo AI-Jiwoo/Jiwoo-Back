@@ -1,5 +1,6 @@
 package org.jiwoo.back.accelerating.service;
 
+import org.jiwoo.back.accelerating.aggregate.vo.BusinessProposalVO;
 import org.jiwoo.back.accelerating.aggregate.vo.ResponseAnalyzeBusinessmodelVO;
 import org.jiwoo.back.accelerating.aggregate.vo.ResponsePythonServerVO;
 import org.jiwoo.back.accelerating.dto.BusinessInfoDTO;
@@ -41,6 +42,9 @@ class BusinessmodelServiceImplTest {
     // 유사 서비스 비즈니스 모델 분석
     private static final String MOCK_ANALYSIS = "This is a mock analysis of the business models.";
     private static final String ERROR_MESSAGE = "비즈니스 모델 분석에 실패했습니다";
+
+    // 사업 제안
+    private static final String MOCK_PROPOSAL = "This is a mock business proposal.";
 
     @Mock
     private CategoryService categoryService;
@@ -191,6 +195,39 @@ class BusinessmodelServiceImplTest {
         verify(openAIService, times(1)).generateAnswer(anyString());
     }
 
+
+    @Test
+    @DisplayName("비즈니스 모델 제안 - 정상 케이스")
+    void proposeBusinessModel_Success() throws OpenAIResponseFailException {
+        // Arrange
+        when(openAIService.generateAnswer(anyString())).thenReturn(MOCK_PROPOSAL);
+
+        // Act
+        ResponseEntity<BusinessProposalVO> result = businessmodelService.proposeBusinessModel(MOCK_ANALYSIS);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(HttpStatus.OK, result.getStatusCode());
+        assertEquals(MOCK_PROPOSAL, result.getBody().getProposal());
+        verify(openAIService, times(1)).generateAnswer(anyString());
+    }
+
+    @Test
+    @DisplayName("비즈니스 모델 제안 - OpenAI 서비스 예외 발생")
+    void proposeBusinessModel_OpenAIServiceThrowsException() throws OpenAIResponseFailException {
+        // Arrange
+        when(openAIService.generateAnswer(anyString())).thenThrow(new OpenAIResponseFailException("OpenAI API 오류"));
+
+        // Act
+        ResponseEntity<BusinessProposalVO> result = businessmodelService.proposeBusinessModel(MOCK_ANALYSIS);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, result.getStatusCode());
+        assertTrue(result.getBody().getProposal().contains("비즈니스 모델 제안에 실패했습니다"));
+        verify(openAIService, times(1)).generateAnswer(anyString());
+    }
+
     private BusinessInfoDTO createBusinessInfoDTO() {
         return new BusinessInfoDTO(
                 BUSINESS_PLATFORM,
@@ -201,4 +238,5 @@ class BusinessmodelServiceImplTest {
                 CUSTOMER_TYPE
         );
     }
+
 }
