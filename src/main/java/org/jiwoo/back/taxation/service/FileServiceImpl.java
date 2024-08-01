@@ -1,5 +1,6 @@
 package org.jiwoo.back.taxation.service;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
@@ -10,10 +11,7 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -77,7 +75,12 @@ public class FileServiceImpl implements FileService {
                 if (!zipEntry.isDirectory()) {
                     String fileName = zipEntry.getName();
                     String fileExtension = getFileExtension(fileName);
-                    sb.append(processFileByExtension(fileExtension, zis)).append("\n");
+
+                    //ZipInputStream을 다시 열기 위해 한 번 읽고 다시 읽을 수 있도록 함
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                    IOUtils.copy(zis, baos);
+                    ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
+                    sb.append(processFileByExtension(fileExtension, bais)).append("\n");
                 }
                 zis.closeEntry();
             }
