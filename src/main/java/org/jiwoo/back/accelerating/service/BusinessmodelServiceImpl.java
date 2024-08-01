@@ -1,9 +1,13 @@
 package org.jiwoo.back.accelerating.service;
 
 import lombok.extern.slf4j.Slf4j;
+import org.jiwoo.back.accelerating.aggregate.vo.ResponseAnalyzeBusinessmodelVO;
 import org.jiwoo.back.accelerating.aggregate.vo.ResponsePythonServerVO;
+import org.jiwoo.back.accelerating.dto.BusinessInfoDTO;
 import org.jiwoo.back.business.dto.BusinessDTO;
 import org.jiwoo.back.category.service.CategoryService;
+import org.jiwoo.back.common.OpenAI.service.OpenAIService;
+import org.jiwoo.back.common.exception.OpenAIResponseFailException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,7 +22,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.apache.tomcat.util.http.FastHttpDateFormat.formatDate;
 
 @Service
 @Slf4j
@@ -26,14 +29,18 @@ public class BusinessmodelServiceImpl implements BusinessmodelService {
 
     private final CategoryService categoryService;
     private final RestTemplate restTemplate;
+    private final OpenAIService openAIService;
+
+    private static final String ERROR_MESSAGE = "비즈니스 모델 분석에 실패했습니다";
 
     @Value("${python.server.url.search}")
     private String pythonServerUrl;
 
     @Autowired
-    public BusinessmodelServiceImpl(CategoryService categoryService, @Qualifier("defaultTemplate") RestTemplate restTemplate) {
+    public BusinessmodelServiceImpl(CategoryService categoryService, @Qualifier("defaultTemplate") RestTemplate restTemplate, OpenAIService openAIService) {
         this.categoryService = categoryService;
         this.restTemplate = restTemplate;
+        this.openAIService = openAIService;
     }
 
     @Override
@@ -85,5 +92,45 @@ public class BusinessmodelServiceImpl implements BusinessmodelService {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         return sdf.format(date);
     }
+
+
+    /* 설명. 조회한 서비스 비즈니스 모델 분석 */
+    @Override
+    public ResponseEntity<ResponseAnalyzeBusinessmodelVO> analyzeBusinessModels(List<ResponsePythonServerVO> similarServices) {
+        try {
+            String prompt = createPromptForAnalysis(similarServices);
+            String analysis = openAIService.generateAnswer(prompt);
+            return ResponseEntity.ok(new ResponseAnalyzeBusinessmodelVO(analysis));
+        } catch (OpenAIResponseFailException e) {
+            log.error("Error analyzing business models", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ResponseAnalyzeBusinessmodelVO(ERROR_MESSAGE + ": " + e.getMessage()));
+        }
+    }
+    private String createPromptForAnalysis(List<ResponsePythonServerVO> similarServices) {
+        StringBuilder prompt = new StringBuilder();
+        prompt.append("다음 유사 서비스들의 비즈니스 모델을 분석해주세요:\n\n");
+
+        for (ResponsePythonServerVO service : similarServices) {
+            prompt.append("회사명: ").append(service.getBusinessName()).append("\n");
+            prompt.append("비즈니스 정보: ").append(getBusinessInfoString(service.getInfo())).append("\n");
+            prompt.append("유사도 점수: ").append(service.getSimilarityScore()).append("\n\n");
+        }
+
+        prompt.append("위 서비스들의 비즈니스 모델에 대해 간결한 분석을 제공해주세요. 수익구조, 공통 전략, 독특한 접근 방식, 그리고 개선 가능한 영역을 포함해 주세요.");
+
+        return prompt.toString();
+    }
+
+    private String getBusinessInfoString(BusinessInfoDTO info) {
+        return "플랫폼: " + info.getBusinessPlatform() +
+                ", 규모: " + info.getBusinessScale() +
+                ", 분야: " + info.getBusinessField() +
+                ", 시작일: " + info.getBusinessStartDate() +
+                ", 투자 상태: " + info.getInvestmentStatus() +
+                ", 고객 유형: " + info.getCustomerType();
+    }
+
+
 }
 
