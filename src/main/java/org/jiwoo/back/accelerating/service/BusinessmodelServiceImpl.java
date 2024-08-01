@@ -1,6 +1,7 @@
 package org.jiwoo.back.accelerating.service;
 
 import lombok.extern.slf4j.Slf4j;
+import org.jiwoo.back.accelerating.aggregate.vo.BusinessProposalVO;
 import org.jiwoo.back.accelerating.aggregate.vo.ResponseAnalyzeBusinessmodelVO;
 import org.jiwoo.back.accelerating.aggregate.vo.ResponsePythonServerVO;
 import org.jiwoo.back.accelerating.dto.BusinessInfoDTO;
@@ -129,6 +130,31 @@ public class BusinessmodelServiceImpl implements BusinessmodelService {
                 ", 시작일: " + info.getBusinessStartDate() +
                 ", 투자 상태: " + info.getInvestmentStatus() +
                 ", 고객 유형: " + info.getCustomerType();
+    }
+
+    /* 설명. 서비스 기반 비즈니스 제안 */
+    @Override
+    public ResponseEntity<BusinessProposalVO> proposeBusinessModel(String analysis) {
+        try {
+            String prompt = createPromptForProposal(analysis);
+            String proposal = openAIService.generateAnswer(prompt);
+            return ResponseEntity.ok(new BusinessProposalVO(proposal));
+        } catch (OpenAIResponseFailException e) {
+            log.error("Error proposing business model", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new BusinessProposalVO("비즈니스 모델 제안에 실패했습니다: " + e.getMessage()));
+        }
+    }
+
+    private String createPromptForProposal(String analysis) {
+        return "다음은 비즈니스 모델 분석 결과입니다:\n\n" + analysis +
+                "\n\n이 분석을 바탕으로 혁신적이고 실행 가능한 비즈니스 모델을 제안해주세요. " +
+                "제안에는 다음 요소를 포함해야 합니다:\n" +
+                "1. 핵심 가치 제안\n" +
+                "2. 목표 고객 세그먼트\n" +
+                "3. 수익 모델\n" +
+                "4. 주요 자원 및 활동\n" +
+                "5. 차별화 전략\n";
     }
 
 
