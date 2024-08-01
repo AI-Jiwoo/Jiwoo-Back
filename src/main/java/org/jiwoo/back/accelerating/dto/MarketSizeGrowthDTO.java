@@ -1,4 +1,4 @@
-package org.jiwoo.back.marketresearch.dto;
+package org.jiwoo.back.accelerating.dto;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -10,6 +10,7 @@ import lombok.AllArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class MarketSizeGrowthDTO {
+    private int businessId;
     private String marketSize;
     private String growthRate;
 }

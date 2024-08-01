@@ -1,4 +1,4 @@
-package org.jiwoo.back.marketresearch.dto;
+package org.jiwoo.back.accelerating.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -12,6 +12,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SimilarServicesAnalysisDTO {
+    private int businessId;
     private List<String> similarServices;
     private String analysis;
 }

@@ -1,13 +1,11 @@
-package org.jiwoo.back.marketresearch.service;
+package org.jiwoo.back.accelerating.service;
 
 import org.jiwoo.back.business.dto.BusinessDTO;
 import org.jiwoo.back.category.service.CategoryService;
 import org.jiwoo.back.common.OpenAI.service.OpenAIService;
 import org.jiwoo.back.common.exception.OpenAIResponseFailException;
-import org.jiwoo.back.marketresearch.aggregate.vo.ResponsePythonServerVO;
-import org.jiwoo.back.marketresearch.dto.BusinessInfoDTO;
-import org.jiwoo.back.marketresearch.dto.MarketSizeGrowthDTO;
-import org.jiwoo.back.marketresearch.dto.SimilarServicesAnalysisDTO;
+import org.jiwoo.back.accelerating.aggregate.vo.ResponsePythonServerVO;
+import org.jiwoo.back.accelerating.dto.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -19,6 +17,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
@@ -60,6 +59,18 @@ class MarketResearchServiceImplTest {
     private static final double SIMILARITY_SCORE_1 = 0.8;
     private static final double SIMILARITY_SCORE_2 = 0.7;
 
+    // 트렌드 및 주요고객 조회
+    private static final String MOCK_TREND_RESPONSE = "트렌드: AI 기술의 발전으로 데이터 분석 시장이 급성장하고 있습니다.\n" +
+            "주요 고객: 20-40대 젊은 전문직 종사자들이 주요 고객층입니다.\n" +
+            "기술 동향: 머신러닝과 딥러닝 기술이 지속적으로 발전하고 있습니다.";
+
+    // 시장조사 이력 저장
+    private static final String MARKET_INFORMATION = "시장 정보 테스트";
+    private static final String COMPETITOR_ANALYSIS = "경쟁사 분석 테스트";
+    private static final String MARKET_TRENDS = "시장 트렌드 테스트";
+    private static final String REGULATION_INFORMATION = "규제 정보 테스트";
+    private static final String MARKET_ENTRY_STRATEGY = "시장 진입 전략 테스트";
+
     @Mock
     private OpenAIService openAIService;
 
@@ -69,6 +80,10 @@ class MarketResearchServiceImplTest {
     @Mock
     private RestTemplate restTemplate;
 
+    @Mock
+    private JdbcTemplate jdbcTemplate;
+
+
     @InjectMocks
     private MarketResearchServiceImpl marketResearchService;
 
@@ -76,6 +91,7 @@ class MarketResearchServiceImplTest {
     void setUp() {
         MockitoAnnotations.openMocks(this);
         ReflectionTestUtils.setField(marketResearchService, "pythonServerUrl", PYTHON_SERVER_URL);
+        ReflectionTestUtils.setField(marketResearchService, "jdbcTemplate", jdbcTemplate);
     }
 
     @DisplayName("사업규모와 성장률 조회 성공")
@@ -231,4 +247,111 @@ class MarketResearchServiceImplTest {
         assertNull(formattedDate);
     }
 
+    @DisplayName("트렌드, 주요 고객, 기술 동향 조회 성공")
+    @Test
+    void getTrendCustomerTechnology_Success() throws OpenAIResponseFailException {
+        // Given
+        BusinessDTO businessDTO = createBusinessDTO(BUSINESS_ID_1);
+
+        when(categoryService.getCategoryNameByBusinessId(BUSINESS_ID_1)).thenReturn(CATEGORY_NAMES);
+        when(openAIService.generateAnswer(any())).thenReturn(MOCK_TREND_RESPONSE);
+
+        // When
+        TrendCustomerTechnologyDTO result = marketResearchService.getTrendCustomerTechnology(businessDTO);
+
+        // Then
+        assertNotNull(result);
+        assertEquals("AI 기술의 발전으로 데이터 분석 시장이 급성장하고 있습니다.", result.getTrend());
+        assertEquals("20-40대 젊은 전문직 종사자들이 주요 고객층입니다.", result.getMainCustomers());
+        assertEquals("머신러닝과 딥러닝 기술이 지속적으로 발전하고 있습니다.", result.getTechnologyTrend());
+
+        verify(categoryService).getCategoryNameByBusinessId(BUSINESS_ID_1);
+        verify(openAIService).generateAnswer(any());
+    }
+
+    @DisplayName("트렌드, 주요 고객, 기술 동향 조회 - 빈 응답")
+    @Test
+    void getTrendCustomerTechnology_EmptyResponse() throws OpenAIResponseFailException {
+        // Given
+        BusinessDTO businessDTO = createBusinessDTO(BUSINESS_ID_2);
+
+        when(categoryService.getCategoryNameByBusinessId(BUSINESS_ID_2)).thenReturn(CATEGORY_NAMES);
+        when(openAIService.generateAnswer(any())).thenReturn("");
+
+        // When
+        TrendCustomerTechnologyDTO result = marketResearchService.getTrendCustomerTechnology(businessDTO);
+
+        // Then
+        assertNotNull(result);
+        assertEquals(NO_INFO, result.getTrend());
+        assertEquals(NO_INFO, result.getMainCustomers());
+        assertEquals(NO_INFO, result.getTechnologyTrend());
+
+        verify(categoryService).getCategoryNameByBusinessId(BUSINESS_ID_2);
+        verify(openAIService).generateAnswer(any());
+    }
+
+    @DisplayName("트렌드, 주요 고객, 기술 동향 조회 - 예외 발생")
+    @Test
+    void getTrendCustomerTechnology_Exception() {
+        // Given
+        BusinessDTO businessDTO = createBusinessDTO(BUSINESS_ID_3);
+
+        when(categoryService.getCategoryNameByBusinessId(BUSINESS_ID_3)).thenThrow(new RuntimeException(DATABASE_ERROR));
+
+        // When & Then
+        assertThrows(RuntimeException.class, () -> marketResearchService.getTrendCustomerTechnology(businessDTO));
+
+        verify(categoryService).getCategoryNameByBusinessId(BUSINESS_ID_3);
+    }
+
+    @DisplayName("시장 조사 이력 저장 성공")
+    @Test
+    void saveMarketResearchHistory_Success() {
+        // Given
+        MarketResearchHistoryDTO historyDTO = createMarketResearchHistoryDTO(BUSINESS_ID_1);
+        when(jdbcTemplate.queryForObject(anyString(), eq(Integer.class), any(Object[].class))).thenReturn(1);
+        when(jdbcTemplate.update(anyString(), any(Object[].class))).thenReturn(1);
+
+        // When & Then
+        assertDoesNotThrow(() -> marketResearchService.saveMarketResearchHistory(historyDTO));
+
+        // Verify
+        verify(jdbcTemplate).queryForObject(anyString(), eq(Integer.class), any(Object[].class));
+        verify(jdbcTemplate).update(anyString(), any(Object[].class));
+    }
+
+    @DisplayName("시장 조사 이력 저장 실패 - 존재하지 않는 비즈니스 ID")
+    @Test
+    void saveMarketResearchHistory_NonExistentBusinessId() {
+        // Given
+        MarketResearchHistoryDTO historyDTO = createMarketResearchHistoryDTO(BUSINESS_ID_1);
+        when(jdbcTemplate.queryForObject(anyString(), eq(Integer.class), any(Object[].class))).thenReturn(0);
+
+        // When & Then
+        assertThrows(IllegalArgumentException.class, () -> marketResearchService.saveMarketResearchHistory(historyDTO));
+    }
+
+    @DisplayName("시장 조사 이력 저장 실패 - 데이터베이스 오류")
+    @Test
+    void saveMarketResearchHistory_DatabaseError() {
+        // Given
+        MarketResearchHistoryDTO historyDTO = createMarketResearchHistoryDTO(BUSINESS_ID_1);
+        when(jdbcTemplate.queryForObject(anyString(), eq(Integer.class), any(Object[].class))).thenReturn(1);
+        when(jdbcTemplate.update(anyString(), any(Object[].class))).thenThrow(new RuntimeException("Database error"));
+
+        // When & Then
+        assertThrows(RuntimeException.class, () -> marketResearchService.saveMarketResearchHistory(historyDTO));
+    }
+
+    private MarketResearchHistoryDTO createMarketResearchHistoryDTO(int businessId) {
+        MarketResearchHistoryDTO dto = new MarketResearchHistoryDTO();
+        dto.setBusinessId(businessId);
+        dto.setMarketInformation(MARKET_INFORMATION);
+        dto.setCompetitorAnalysis(COMPETITOR_ANALYSIS);
+        dto.setMarketTrends(MARKET_TRENDS);
+        dto.setRegulationInformation(REGULATION_INFORMATION);
+        dto.setMarketEntryStrategy(MARKET_ENTRY_STRATEGY);
+        return dto;
+    }
 }
