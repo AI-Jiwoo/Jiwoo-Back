@@ -1,8 +1,12 @@
 package org.jiwoo.back.accelerating.service;
 
+import org.jiwoo.back.accelerating.aggregate.vo.ResponseAnalyzeBusinessmodelVO;
 import org.jiwoo.back.accelerating.aggregate.vo.ResponsePythonServerVO;
+import org.jiwoo.back.accelerating.dto.BusinessInfoDTO;
 import org.jiwoo.back.business.dto.BusinessDTO;
 import org.jiwoo.back.category.service.CategoryService;
+import org.jiwoo.back.common.OpenAI.service.OpenAIService;
+import org.jiwoo.back.common.exception.OpenAIResponseFailException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
@@ -24,6 +28,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class BusinessmodelServiceImplTest {
 
+    // 유사 서비스 조회
     private static final int BUSINESS_ID = 1;
     private static final String BUSINESS_PLATFORM = "SaaS";
     private static final String BUSINESS_SCALE = "중소기업";
@@ -33,20 +38,28 @@ class BusinessmodelServiceImplTest {
     private static final String CUSTOMER_TYPE = "B2B";
     private static final String PYTHON_SERVER_URL = "http://localhost:8000/api";
 
+    // 유사 서비스 비즈니스 모델 분석
+    private static final String MOCK_ANALYSIS = "This is a mock analysis of the business models.";
+    private static final String ERROR_MESSAGE = "비즈니스 모델 분석에 실패했습니다";
+
     @Mock
     private CategoryService categoryService;
 
     @Mock
     private RestTemplate restTemplate;
 
+    @Mock
+    private OpenAIService openAIService;
+
     private BusinessmodelServiceImpl businessmodelService;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        businessmodelService = new BusinessmodelServiceImpl(categoryService, restTemplate);
+        businessmodelService = new BusinessmodelServiceImpl(categoryService, restTemplate, openAIService);
         ReflectionTestUtils.setField(businessmodelService, "pythonServerUrl", PYTHON_SERVER_URL);
     }
+
 
     @Test
     @DisplayName("유사 서비스 조회 - 정상 케이스")
@@ -133,5 +146,59 @@ class BusinessmodelServiceImplTest {
         businessDTO.setBusinessStartDate(startDate);
 
         return businessDTO;
+    }
+
+
+    @Test
+    @DisplayName("비즈니스 모델 분석 - 정상 케이스")
+    void analyzeBusinessModels_Success() throws OpenAIResponseFailException {
+        // Arrange
+        List<ResponsePythonServerVO> similarServices = Arrays.asList(
+                new ResponsePythonServerVO("Company A", createBusinessInfoDTO(), 0.9),
+                new ResponsePythonServerVO("Company B", createBusinessInfoDTO(), 0.8)
+        );
+        when(openAIService.generateAnswer(anyString())).thenReturn(MOCK_ANALYSIS);
+
+        // Act
+        ResponseEntity<ResponseAnalyzeBusinessmodelVO> result = businessmodelService.analyzeBusinessModels(similarServices);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(HttpStatus.OK, result.getStatusCode());
+        assertEquals(MOCK_ANALYSIS, result.getBody().getAnalysis());
+        verify(openAIService, times(1)).generateAnswer(anyString());
+    }
+
+    @Test
+    @DisplayName("비즈니스 모델 분석 - OpenAI 서비스 예외 발생")
+    void analyzeBusinessModels_OpenAIServiceThrowsException() throws OpenAIResponseFailException {
+        // Arrange
+        List<ResponsePythonServerVO> similarServices = Arrays.asList(
+                new ResponsePythonServerVO("Company A", createBusinessInfoDTO(), 0.9)
+        );
+        when(openAIService.generateAnswer(anyString())).thenThrow(new OpenAIResponseFailException("OpenAI API 오류"));
+
+        // Act
+        ResponseEntity<ResponseAnalyzeBusinessmodelVO> result = businessmodelService.analyzeBusinessModels(similarServices);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, result.getStatusCode());
+        assertNotNull(result.getBody());
+        assertNotNull(result.getBody().getAnalysis());
+        assertTrue(result.getBody().getAnalysis().contains(ERROR_MESSAGE),
+                "Expected error message not found in the response");
+        verify(openAIService, times(1)).generateAnswer(anyString());
+    }
+
+    private BusinessInfoDTO createBusinessInfoDTO() {
+        return new BusinessInfoDTO(
+                BUSINESS_PLATFORM,
+                BUSINESS_SCALE,
+                BUSINESS_FIELD,
+                BUSINESS_START_DATE,
+                INVESTMENT_STATUS,
+                CUSTOMER_TYPE
+        );
     }
 }
