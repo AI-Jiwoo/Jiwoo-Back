@@ -37,7 +37,12 @@ public class TaxationServiceImpl implements TaxationService{
         return authDTO;
     }
 
+    @Override
+    public String getBusinessType(BusinessDTO businessDTO) {
+        return "";
+    }
 
+    //
 
 
 
