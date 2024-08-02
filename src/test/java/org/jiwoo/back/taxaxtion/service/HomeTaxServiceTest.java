@@ -28,21 +28,9 @@ public class HomeTaxServiceTest {
     @Qualifier("defaultTemplate")
     private RestTemplate restTemplate;
 
-//    @Value("${homeTax.api.url}")
-//    private String apiUrl;
-//
-//    @Value("${homeTax.api.serviceKey}")
-//    private String serviceKey;
-//
-//    @Value("${homeTax.api.authorization}")
-//    private String authorization;
-
     @BeforeEach
     void setUp(){
         MockitoAnnotations.openMocks(this);
-//        System.out.println("😎test apiUrl: " + apiUrl);
-//        System.out.println("😎testserviceKey: " + serviceKey);
-//        System.out.println("😎test authorization: " + authorization);
     }
 
     @DisplayName("HomeTax API 로 사업자 유형 조회 테스트")

@@ -1,9 +1,7 @@
 package org.jiwoo.back.taxation.service;
 
 import org.jiwoo.back.business.dto.BusinessDTO;
-import org.jiwoo.back.taxation.dto.TaxationDTO;
 import org.jiwoo.back.user.dto.AuthDTO;
-import org.springframework.web.multipart.MultipartFile;
 
 public interface TaxationService {
 
