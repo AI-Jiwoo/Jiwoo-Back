@@ -1,17 +1,14 @@
 package org.jiwoo.back.taxation.service;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,23 +52,6 @@ public class HomeTaxServiceImpl implements HomeTaxService{
         log.info("\n***** authorization : " + authorization);
 
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestData, headers);
-//
-//        URI uri = UriComponentsBuilder.fromHttpUrl(apiUrl)
-//                .queryParam("serviceKey", serviceKey)
-//                .build()
-//                .encode()
-//                .toUri();
-//
-//        log.info("***** URI : " + uri.toString());
-//
-//        try {
-//            Map<String, Object> response = restTemplate.postForObject(uri, entity, Map.class);
-//            log.info("***** api 호출하고 돌아옴");
-//            return response != null ? response.toString() : "API로부터 응답이 없습니다.";
-//        } catch (HttpClientErrorException e) {
-//            log.error("API 요청 중 에러 발생: " + e.getMessage());
-//            return "API 요청 중 에러 발생: " + e.getMessage();
-//        }
 
         try {
             String url = String.format("%s?serviceKey=%s", apiUrl, serviceKey);
