@@ -46,7 +46,7 @@ public class BusinessController {
         }
 
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-        String userEmail = userDetails.getUsername(); // 이메일을 사용자 식별자로 사용
+        String userEmail = userDetails.getUsername();
 
         try {
             // 입력값 검증
@@ -59,6 +59,12 @@ public class BusinessController {
             if (!businessDTO.getBusinessNumber().matches("\\d{3}-\\d{2}-\\d{5}")) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(new ResponseBusinessVO("올바른 사업자 등록번호 형식이 아닙니다.", null));
+            }
+
+            // 카테고리 ID 검증
+            if (businessDTO.getCategoryIds() == null || businessDTO.getCategoryIds().isEmpty()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(new ResponseBusinessVO("최소 하나의 카테고리를 선택해야 합니다.", null));
             }
 
             BusinessDTO savedBusiness = businessService.saveBusiness(businessDTO, userEmail);
