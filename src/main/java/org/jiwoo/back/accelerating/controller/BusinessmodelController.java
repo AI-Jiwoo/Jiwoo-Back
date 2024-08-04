@@ -1,5 +1,6 @@
 package org.jiwoo.back.accelerating.controller;
 
+import org.jiwoo.back.accelerating.aggregate.vo.BusinessProposalVO;
 import org.jiwoo.back.accelerating.aggregate.vo.ResponseAnalyzeBusinessmodelVO;
 import org.jiwoo.back.accelerating.aggregate.vo.ResponsePythonServerVO;
 import org.jiwoo.back.accelerating.service.BusinessmodelService;
@@ -31,5 +32,11 @@ public class BusinessmodelController {
     @PostMapping("/analyze")
     public ResponseEntity<ResponseAnalyzeBusinessmodelVO> analyzeBusinessModels(@RequestBody List<ResponsePythonServerVO> similarServices) {
         return businessmodelService.analyzeBusinessModels(similarServices);
+    }
+
+    /* 설명. 서비스 기반 비즈니스 제안 */
+    @PostMapping("/propose")
+    public ResponseEntity<BusinessProposalVO> proposeBusinessModel(@RequestBody String analysis) {
+        return businessmodelService.proposeBusinessModel(analysis);
     }
 }
