@@ -289,9 +289,8 @@ public class MarketResearchServiceImpl implements MarketResearchService {
             throw new IllegalArgumentException("Business with ID " + historyDTO.getBusinessId() + " does not exist");
         }
 
-        String sql = "INSERT INTO tbl_market_research (CREATED_AT, MARKET_INFORMATION, COMPETITOR_ANALYSIS, MARKET_TRENDS, REGULATION_INFORMATION, MARKET_ENTITY_STRATEGY, BUSINESS_ID) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO tbl_market_research (CREATED_AT, MARKET_INFORMATION, COMPETITOR_ANALYSIS, MARKET_TRENDS, REGULATION_INFORMATION, MARKET_ENTITY_STRATEGY, BUSINESS_ID) VALUES (NOW(), ?, ?, ?, ?, ?, ?)";
         jdbcTemplate.update(sql,
-                new java.sql.Date(System.currentTimeMillis()),
                 historyDTO.getMarketInformation(),
                 historyDTO.getCompetitorAnalysis(),
                 historyDTO.getMarketTrends(),
