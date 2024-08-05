@@ -26,6 +26,9 @@ class CategoryServiceImplTest {
     private static final List<String> CATEGORY_LIST = Arrays.asList(CATEGORY_1, CATEGORY_2);
     private static final List<String> EMPTY_CATEGORY_LIST = Collections.emptyList();
 
+    private static final List<String> ALL_CATEGORY_NAMES = Arrays.asList("IT", "인공지능", "빅데이터", "클라우드");
+
+
     @Mock
     private CategoryRepository categoryRepository;
 
@@ -65,5 +68,33 @@ class CategoryServiceImplTest {
         // Then
         assertEquals(NO_CATEGORY, result);
         verify(categoryRepository, times(1)).findCategoryNamesByBusinessId(BUSINESS_ID_WITHOUT_CATEGORIES);
+    }
+
+    @Test
+    @DisplayName("전체 카테고리 이름 조회")
+    void getAllCategoryNames() {
+        // Given
+        when(categoryRepository.findAllCategoryNames()).thenReturn(ALL_CATEGORY_NAMES);
+
+        // When
+        List<String> result = categoryService.getAllCategoryNames();
+
+        // Then
+        assertEquals(ALL_CATEGORY_NAMES, result);
+        verify(categoryRepository, times(1)).findAllCategoryNames();
+    }
+
+    @Test
+    @DisplayName("전체 카테고리 이름 조회 - 카테고리가 없는 경우")
+    void getAllCategoryNames_EmptyList() {
+        // Given
+        when(categoryRepository.findAllCategoryNames()).thenReturn(Collections.emptyList());
+
+        // When
+        List<String> result = categoryService.getAllCategoryNames();
+
+        // Then
+        assertEquals(Collections.emptyList(), result);
+        verify(categoryRepository, times(1)).findAllCategoryNames();
     }
 }
