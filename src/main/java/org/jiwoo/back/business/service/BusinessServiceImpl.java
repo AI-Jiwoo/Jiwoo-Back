@@ -2,10 +2,14 @@ package org.jiwoo.back.business.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.jiwoo.back.business.aggregate.entity.Business;
+import org.jiwoo.back.business.aggregate.entity.BusinessCategory;
 import org.jiwoo.back.business.aggregate.entity.StartupStage;
 import org.jiwoo.back.business.dto.BusinessDTO;
+import org.jiwoo.back.business.repository.BusinessCategoryRepository;
 import org.jiwoo.back.business.repository.BusinessRepository;
 import org.jiwoo.back.business.repository.StartupStageRepository;
+import org.jiwoo.back.category.aggregate.entity.Category;
+import org.jiwoo.back.category.repository.CategoryRepository;
 import org.jiwoo.back.category.service.CategoryService;
 import org.jiwoo.back.user.aggregate.entity.User;
 import org.jiwoo.back.user.repository.UserRepository;
@@ -17,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +35,8 @@ public class BusinessServiceImpl implements BusinessService {
     private final UserRepository userRepository;
     private final StartupStageRepository startupStageRepository;
     private final CategoryService categoryService;
+    private final CategoryRepository categoryRepository;
+    private final BusinessCategoryRepository businessCategoryRepository;
     private final RestTemplate restTemplate;
 
     @Value("${python.server.url.insert}")
@@ -40,11 +47,15 @@ public class BusinessServiceImpl implements BusinessService {
                                UserRepository userRepository,
                                StartupStageRepository startupStageRepository,
                                CategoryService categoryService,
+                               CategoryRepository categoryRepository,
+                               BusinessCategoryRepository businessCategoryRepository,
                                @Qualifier("defaultTemplate") RestTemplate restTemplate) {
         this.businessRepository = businessRepository;
         this.userRepository = userRepository;
         this.startupStageRepository = startupStageRepository;
         this.categoryService = categoryService;
+        this.categoryRepository = categoryRepository;
+        this.businessCategoryRepository = businessCategoryRepository;
         this.restTemplate = restTemplate;
     }
 
@@ -80,9 +91,26 @@ public class BusinessServiceImpl implements BusinessService {
                 .customerType(businessDTO.getCustomerType())
                 .user(user)
                 .startupStage(startupStage)
+                .businessCategories(new ArrayList<>())
                 .build();
 
         Business savedBusiness = businessRepository.save(business);
+
+        // 카테고리 저장
+        if (businessDTO.getCategoryIds() != null && !businessDTO.getCategoryIds().isEmpty()) {
+            for (Integer categoryId : businessDTO.getCategoryIds()) {
+                Category category = categoryRepository.findById(categoryId)
+                        .orElseThrow(() -> new RuntimeException("유효하지 않은 카테고리입니다. ID: " + categoryId));
+
+                BusinessCategory businessCategory = BusinessCategory.builder()
+                        .business(savedBusiness)
+                        .category(category)
+                        .build();
+
+                savedBusiness.getBusinessCategories().add(businessCategory); // 직접 추가
+                businessCategoryRepository.save(businessCategory);
+            }
+        }
 
         // Vector DB에 저장
         saveToVectorDb(savedBusiness);
@@ -104,6 +132,12 @@ public class BusinessServiceImpl implements BusinessService {
     }
 
     private BusinessDTO convertToDTO(Business business) {
+        List<Integer> categoryIds = business.getBusinessCategories() != null
+                ? business.getBusinessCategories().stream()
+                .map(bc -> bc.getCategory().getId())
+                .collect(Collectors.toList())
+                : new ArrayList<>();
+
         return new BusinessDTO(
                 business.getId(),
                 business.getBusinessName(),
@@ -118,9 +152,11 @@ public class BusinessServiceImpl implements BusinessService {
                 business.getInvestmentStatus(),
                 business.getCustomerType(),
                 business.getUser().getId(),
-                business.getStartupStage().getId()
+                business.getStartupStage().getId(),
+                categoryIds
         );
     }
+
 
     private void saveToVectorDb(Business business) {
         try {
