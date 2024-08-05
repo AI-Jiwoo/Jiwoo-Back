@@ -6,8 +6,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import org.jiwoo.back.business.aggregate.entity.Business;
+import java.time.LocalDateTime;
 
-import java.util.Date;
 
 @Entity
 @Table(name = "tbl_market_research")
@@ -22,7 +22,7 @@ public class MarketResearch {
 
     @Column(name = "CREATED_AT")
     @Temporal(TemporalType.TIMESTAMP)
-    private Date createdAt;
+    private LocalDateTime createdAt;
 
     @Column(name = "MARKET_INFORMATION")
     private String marketInformation;

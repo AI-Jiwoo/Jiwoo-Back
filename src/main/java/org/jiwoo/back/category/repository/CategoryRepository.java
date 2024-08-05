@@ -13,4 +13,7 @@ public interface CategoryRepository extends JpaRepository<Category, Integer> {
 
     @Query("SELECT c.name FROM Business b JOIN b.businessCategories bc JOIN bc.category c WHERE b.id = :businessId")
     List<String> findCategoryNamesByBusinessId(@Param("businessId") int businessId);
+
+    @Query("SELECT c.name FROM Category c")
+    List<String> findAllCategoryNames();
 }

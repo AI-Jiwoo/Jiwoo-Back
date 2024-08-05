@@ -1,15 +1,23 @@
 package org.jiwoo.back.accelerating.controller;
 
+import jakarta.persistence.EntityNotFoundException;
+import org.jiwoo.back.accelerating.aggregate.vo.ResponseMarketResearchHistoryVO;
 import org.jiwoo.back.accelerating.aggregate.vo.ResponseSimilarVO;
 import org.jiwoo.back.accelerating.aggregate.vo.ResponseTrendCustomerTechnologyVO;
 import org.jiwoo.back.accelerating.dto.MarketResearchHistoryDTO;
 import org.jiwoo.back.accelerating.service.MarketResearchService;
 import org.jiwoo.back.accelerating.aggregate.vo.ResponseMarketResearchVO;
 import org.jiwoo.back.business.dto.BusinessDTO;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -65,6 +73,24 @@ public class MarketResearchController {
             return ResponseEntity.badRequest().body("조회 이력 저장 실패: " + e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("조회 이력 저장 실패: 내부 서버 오류");
+        }
+    }
+
+    /* 설명. 시장 조회 이력 조회 */
+    @GetMapping("/history")
+    public ResponseEntity<ResponseMarketResearchHistoryVO> getMarketResearchHistory(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        try {
+            String userEmail = userDetails.getUsername();
+            List<MarketResearchHistoryDTO> histories = marketResearchService.findAllMarketResearchByUser(userEmail, pageable);
+            return ResponseEntity.ok(new ResponseMarketResearchHistoryVO("시장 조회 이력 조회 성공", histories));
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ResponseMarketResearchHistoryVO("사용자를 찾을 수 없습니다: " + e.getMessage(), null));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ResponseMarketResearchHistoryVO("서버 오류가 발생했습니다: " + e.getMessage(), null));
         }
     }
 }
