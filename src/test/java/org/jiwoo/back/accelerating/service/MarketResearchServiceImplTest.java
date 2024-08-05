@@ -1,11 +1,17 @@
 package org.jiwoo.back.accelerating.service;
 
+import jakarta.persistence.EntityNotFoundException;
+import org.jiwoo.back.accelerating.aggregate.entity.MarketResearch;
+import org.jiwoo.back.accelerating.repository.MarketResearchRepository;
+import org.jiwoo.back.business.aggregate.entity.Business;
 import org.jiwoo.back.business.dto.BusinessDTO;
 import org.jiwoo.back.category.service.CategoryService;
 import org.jiwoo.back.common.OpenAI.service.OpenAIService;
 import org.jiwoo.back.common.exception.OpenAIResponseFailException;
 import org.jiwoo.back.accelerating.aggregate.vo.ResponsePythonServerVO;
 import org.jiwoo.back.accelerating.dto.*;
+import org.jiwoo.back.user.aggregate.entity.User;
+import org.jiwoo.back.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -13,6 +19,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -22,9 +32,11 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -71,6 +83,14 @@ class MarketResearchServiceImplTest {
     private static final String REGULATION_INFORMATION = "규제 정보 테스트";
     private static final String MARKET_ENTRY_STRATEGY = "시장 진입 전략 테스트";
 
+    // 시장조사 이력 조회
+    private static final String USER_EMAIL = "test@example.com";
+    private static final LocalDateTime CREATED_AT = LocalDateTime.now();
+    private static final String MARKET_ENTITY_STRATEGY = "시장 진입 전략";
+    private static final int PAGE_SIZE = 10;
+    private static final int TOTAL_ELEMENTS = 20;
+    private static final int TOTAL_PAGES = 2;
+
     @Mock
     private OpenAIService openAIService;
 
@@ -82,6 +102,13 @@ class MarketResearchServiceImplTest {
 
     @Mock
     private JdbcTemplate jdbcTemplate;
+
+    @Mock
+    private UserRepository userRepository;
+
+    @Mock
+    private MarketResearchRepository marketResearchRepository;
+
 
 
     @InjectMocks
@@ -305,53 +332,61 @@ class MarketResearchServiceImplTest {
         verify(categoryService).getCategoryNameByBusinessId(BUSINESS_ID_3);
     }
 
-    @DisplayName("시장 조사 이력 저장 성공")
+    @DisplayName("사용자별 시장 조회 이력 조회 성공")
     @Test
-    void saveMarketResearchHistory_Success() {
+    void findAllMarketResearchByUser_Success() {
         // Given
-        MarketResearchHistoryDTO historyDTO = createMarketResearchHistoryDTO(BUSINESS_ID_1);
-        when(jdbcTemplate.queryForObject(anyString(), eq(Integer.class), any(Object[].class))).thenReturn(1);
-        when(jdbcTemplate.update(anyString(), any(Object[].class))).thenReturn(1);
+        User user = new User();
+        ReflectionTestUtils.setField(user, "email", USER_EMAIL);
 
-        // When & Then
-        assertDoesNotThrow(() -> marketResearchService.saveMarketResearchHistory(historyDTO));
+        MarketResearch marketResearch = new MarketResearch();
+        ReflectionTestUtils.setField(marketResearch, "createdAt", CREATED_AT);
+        ReflectionTestUtils.setField(marketResearch, "marketInformation", MARKET_INFORMATION);
+        ReflectionTestUtils.setField(marketResearch, "competitorAnalysis", COMPETITOR_ANALYSIS);
+        ReflectionTestUtils.setField(marketResearch, "marketTrends", MARKET_TRENDS);
+        ReflectionTestUtils.setField(marketResearch, "regulationInformation", REGULATION_INFORMATION);
+        ReflectionTestUtils.setField(marketResearch, "marketEntityStrategy", MARKET_ENTITY_STRATEGY);
 
-        // Verify
-        verify(jdbcTemplate).queryForObject(anyString(), eq(Integer.class), any(Object[].class));
-        verify(jdbcTemplate).update(anyString(), any(Object[].class));
+        Business business = new Business();
+        ReflectionTestUtils.setField(business, "id", BUSINESS_ID_1);
+        ReflectionTestUtils.setField(marketResearch, "business", business);
+
+        List<MarketResearch> marketResearchList = Arrays.asList(marketResearch);
+        Page<MarketResearch> marketResearchPage = new PageImpl<>(marketResearchList, PageRequest.of(0, PAGE_SIZE), TOTAL_ELEMENTS);
+
+        when(userRepository.findByEmail(USER_EMAIL)).thenReturn(user);
+        when(marketResearchRepository.findAllByBusinessUser(eq(user), any(Pageable.class))).thenReturn(marketResearchPage);
+
+        // When
+        List<MarketResearchHistoryDTO> result = marketResearchService.findAllMarketResearchByUser(USER_EMAIL, PageRequest.of(0, PAGE_SIZE));
+
+        // Then
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        MarketResearchHistoryDTO dto = result.get(0);
+        assertEquals(CREATED_AT, dto.getCreateAt());
+        assertEquals(MARKET_INFORMATION, dto.getMarketInformation());
+        assertEquals(COMPETITOR_ANALYSIS, dto.getCompetitorAnalysis());
+        assertEquals(MARKET_TRENDS, dto.getMarketTrends());
+        assertEquals(REGULATION_INFORMATION, dto.getRegulationInformation());
+        assertEquals(MARKET_ENTITY_STRATEGY, dto.getMarketEntryStrategy());
+        assertEquals(BUSINESS_ID_1, dto.getBusinessId());
+
+        verify(userRepository).findByEmail(USER_EMAIL);
+        verify(marketResearchRepository).findAllByBusinessUser(eq(user), any(Pageable.class));
     }
 
-    @DisplayName("시장 조사 이력 저장 실패 - 존재하지 않는 비즈니스 ID")
+    @DisplayName("사용자를 찾을 수 없을 때 예외 발생")
     @Test
-    void saveMarketResearchHistory_NonExistentBusinessId() {
+    void findAllMarketResearchByUser_UserNotFound() {
         // Given
-        MarketResearchHistoryDTO historyDTO = createMarketResearchHistoryDTO(BUSINESS_ID_1);
-        when(jdbcTemplate.queryForObject(anyString(), eq(Integer.class), any(Object[].class))).thenReturn(0);
+        when(userRepository.findByEmail(USER_EMAIL)).thenReturn(null);
 
         // When & Then
-        assertThrows(IllegalArgumentException.class, () -> marketResearchService.saveMarketResearchHistory(historyDTO));
-    }
+        assertThrows(EntityNotFoundException.class, () ->
+                marketResearchService.findAllMarketResearchByUser(USER_EMAIL, PageRequest.of(0, PAGE_SIZE)));
 
-    @DisplayName("시장 조사 이력 저장 실패 - 데이터베이스 오류")
-    @Test
-    void saveMarketResearchHistory_DatabaseError() {
-        // Given
-        MarketResearchHistoryDTO historyDTO = createMarketResearchHistoryDTO(BUSINESS_ID_1);
-        when(jdbcTemplate.queryForObject(anyString(), eq(Integer.class), any(Object[].class))).thenReturn(1);
-        when(jdbcTemplate.update(anyString(), any(Object[].class))).thenThrow(new RuntimeException("Database error"));
-
-        // When & Then
-        assertThrows(RuntimeException.class, () -> marketResearchService.saveMarketResearchHistory(historyDTO));
-    }
-
-    private MarketResearchHistoryDTO createMarketResearchHistoryDTO(int businessId) {
-        MarketResearchHistoryDTO dto = new MarketResearchHistoryDTO();
-        dto.setBusinessId(businessId);
-        dto.setMarketInformation(MARKET_INFORMATION);
-        dto.setCompetitorAnalysis(COMPETITOR_ANALYSIS);
-        dto.setMarketTrends(MARKET_TRENDS);
-        dto.setRegulationInformation(REGULATION_INFORMATION);
-        dto.setMarketEntryStrategy(MARKET_ENTRY_STRATEGY);
-        return dto;
+        verify(userRepository).findByEmail(USER_EMAIL);
+        verifyNoInteractions(marketResearchRepository);
     }
 }
