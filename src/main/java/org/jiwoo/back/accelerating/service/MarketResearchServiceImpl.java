@@ -1,9 +1,14 @@
 package org.jiwoo.back.accelerating.service;
 
-import jakarta.transaction.Transactional;
+import jakarta.persistence.EntityNotFoundException;
+import org.springframework.transaction.annotation.Transactional;
+import org.jiwoo.back.accelerating.aggregate.entity.MarketResearch;
 import org.jiwoo.back.accelerating.aggregate.vo.ResponsePythonServerVO;
 import org.jiwoo.back.accelerating.dto.MarketResearchHistoryDTO;
 import org.jiwoo.back.accelerating.dto.TrendCustomerTechnologyDTO;
+import org.jiwoo.back.accelerating.repository.MarketResearchRepository;
+import org.jiwoo.back.user.aggregate.entity.User;
+import org.jiwoo.back.user.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,6 +19,8 @@ import org.jiwoo.back.accelerating.dto.MarketSizeGrowthDTO;
 import org.jiwoo.back.common.OpenAI.service.OpenAIService;
 import org.jiwoo.back.accelerating.dto.SimilarServicesAnalysisDTO;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.*;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -31,6 +38,8 @@ public class MarketResearchServiceImpl implements MarketResearchService {
     private final OpenAIService openAIService;
     private final CategoryService categoryService;
     private final RestTemplate restTemplate;
+    private final MarketResearchRepository marketResearchRepository;
+    private final UserRepository userRepository;
 
     @Value("${python.server.url.search}")
     private String pythonServerUrl;
@@ -38,10 +47,12 @@ public class MarketResearchServiceImpl implements MarketResearchService {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    public MarketResearchServiceImpl(OpenAIService openAIService, CategoryService categoryService, @Qualifier("defaultTemplate") RestTemplate restTemplate) {
+    public MarketResearchServiceImpl(OpenAIService openAIService, CategoryService categoryService, @Qualifier("defaultTemplate") RestTemplate restTemplate, MarketResearchRepository marketResearchRepository, UserRepository userRepository) {
         this.openAIService = openAIService;
         this.categoryService = categoryService;
         this.restTemplate = restTemplate;
+        this.marketResearchRepository = marketResearchRepository;
+        this.userRepository = userRepository;
     }
 
     /* 설명. 시장 규모, 성장률 조회 */
@@ -297,6 +308,34 @@ public class MarketResearchServiceImpl implements MarketResearchService {
                 historyDTO.getRegulationInformation(),
                 historyDTO.getMarketEntryStrategy(),
                 historyDTO.getBusinessId()
+        );
+    }
+
+    /* 설명. 시장 조회 이력 조회 */
+    @Override
+    @Transactional(readOnly = true)
+    public List<MarketResearchHistoryDTO> findAllMarketResearchByUser(String userEmail, Pageable pageable) {
+        User user = userRepository.findByEmail(userEmail);
+        if (user == null) {
+            throw new EntityNotFoundException("사용자를 찾을 수 없습니다: " + userEmail);
+        }
+
+        Page<MarketResearch> marketResearchPage = marketResearchRepository.findAllByBusinessUser(user, pageable);
+
+        return marketResearchPage.getContent().stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    private MarketResearchHistoryDTO convertToDTO(MarketResearch marketResearch) {
+        return new MarketResearchHistoryDTO(
+                marketResearch.getCreatedAt(),
+                marketResearch.getMarketInformation(),
+                marketResearch.getCompetitorAnalysis(),
+                marketResearch.getMarketTrends(),
+                marketResearch.getRegulationInformation(),
+                marketResearch.getMarketEntityStrategy(),
+                marketResearch.getBusiness().getId()
         );
     }
 }
