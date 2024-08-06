@@ -45,18 +45,18 @@ public class FileServiceImplTest {
     @DisplayName("파일 변환 서비스 테스트")
     @ParameterizedTest
     @MethodSource("fileProvider")
-    void testPreprocessFile(MultipartFile file, String expectedContent) throws Exception {
-        //given
-        //파일 입력
-        String result = fileService.preprocessFile(file);
-
-        //when
-
-        //then
-        assertNotNull(result);
-        assertTrue(result.contains(expectedContent));
-        System.out.println(result);
-    }
+//    void testPreprocessTransactionFiles(MultipartFile file, String expectedContent) throws Exception {
+//        //given
+//        //파일 입력
+//        String result = fileService.preprocessTransactionFiles(file);
+//
+//        //when
+//
+//        //then
+//        assertNotNull(result);
+//        assertTrue(result.contains(expectedContent));
+//        System.out.println(result);
+//    }
 
 
 

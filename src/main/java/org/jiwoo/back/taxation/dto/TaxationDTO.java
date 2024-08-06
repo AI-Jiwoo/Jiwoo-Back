@@ -1,8 +1,11 @@
 package org.jiwoo.back.taxation.dto;
 
 import lombok.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.sql.Date;
+import java.util.List;
+import java.util.Map;
 
 @Getter
 @Setter
@@ -11,14 +14,17 @@ import java.sql.Date;
 @ToString
 public class TaxationDTO {
 
-    private int id;                     // 세무코드
-    private double totalSales;         // 총 매출액
-    private double grossIncome;        // 총 소득
-    private double netSales;           // 순 매출액
-    private Date startDate;            // 시작날짜
-    private Date endDate;               // 마지막 날짜
-    private String lossStatus;          // 적자여부
-    private double incomeTax;           // 종합소득세
-    private int businessId;             // 사업코드
-    private double additionalCost;      // 세금절세를 위한 추가비용
+    private FileDTO transactionList;  // 거래내역 파일들 (multi)
+    private FileDTO incomeTaxProof;   // 소득/세액공제 파일 (one)
+
+    private String businessId;          // 사업 번호
+    private String businessCode;        // 사업자 등록 번호
+    private String currentDate;         // 현재 날짜
+    private String bank;                // 은행 정보
+    private String businessType;        // 사업자유형 정보
+    private String businessContent;     // 사업 내용
+    private String vatInfo;             // 부가가치세 정보
+    private String incomeRates;         // 종합소득세 정보
+
+
 }

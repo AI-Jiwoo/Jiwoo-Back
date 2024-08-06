@@ -15,7 +15,7 @@ import java.util.Map;
 
 @Service
 @Slf4j
-public class HomeTaxServiceImpl implements HomeTaxService{
+public class HomeTaxAPIServiceImpl implements HomeTaxAPIService {
 
     @Value("${homeTax.api.url}")
     private String apiUrl;
@@ -29,7 +29,7 @@ public class HomeTaxServiceImpl implements HomeTaxService{
     @Qualifier("defaultTemplate")
     private final RestTemplate restTemplate;
 
-    public HomeTaxServiceImpl(@Qualifier("defaultTemplate") RestTemplate restTemplate) {
+    public HomeTaxAPIServiceImpl(@Qualifier("defaultTemplate") RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
     }
 

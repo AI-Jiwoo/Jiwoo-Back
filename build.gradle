@@ -66,6 +66,9 @@ dependencies {
 	// PDFBox 라이브러리를 사용할 경우
 	implementation 'org.apache.pdfbox:pdfbox:2.0.27'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+	//Jsoup 라이브러리(홈페이지 크롤링용)
+	implementation 'org.jsoup:jsoup:1.15.3'
 }
 
 tasks.named('test') {

@@ -14,6 +14,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -21,10 +23,33 @@ import java.util.zip.ZipInputStream;
 public class FileServiceImpl implements FileService {
 
 
-    //파일 전처리
+    //거래내역 파일 전처리
     @Override
-    public String preprocessFile(MultipartFile file) throws Exception {
-        String fileName = file.getOriginalFilename();
+    public List<String> preprocessTransactionFiles(List<MultipartFile> transactionFiles) throws Exception {
+
+        List<String> processedFiles = new ArrayList<>();
+
+        for(MultipartFile file : transactionFiles){
+            String fileName = file.getOriginalFilename();
+
+            if (fileName == null) {
+                throw new IllegalArgumentException("파일 이름이 존재하지 않습니다.");
+            }
+
+            //확장자 가져오기
+            String fileExtension = getFileExtension(fileName);
+
+            //확장자에 따라 다르게 처리
+            try (InputStream inputStream = file.getInputStream()) {
+                processedFiles.add(processFileByExtension(fileExtension, inputStream));
+            }
+        }
+        return processedFiles;
+    }
+
+    // 세액/소득공제 파일 전처리
+    public String preprocessIncomeTaxProofFiles(MultipartFile incomeTaxProofFile) throws Exception {
+        String fileName = incomeTaxProofFile.getOriginalFilename();
 
         if (fileName == null) {
             throw new IllegalArgumentException("파일 이름이 존재하지 않습니다.");
@@ -34,7 +59,7 @@ public class FileServiceImpl implements FileService {
         String fileExtension = getFileExtension(fileName);
 
         //확장자에 따라 다르게 처리
-        try (InputStream inputStream = file.getInputStream()) {
+        try (InputStream inputStream = incomeTaxProofFile.getInputStream()) {
             return processFileByExtension(fileExtension, inputStream);
         }
     }

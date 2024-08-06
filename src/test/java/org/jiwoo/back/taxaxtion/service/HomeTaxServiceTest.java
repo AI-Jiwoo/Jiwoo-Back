@@ -1,6 +1,6 @@
 package org.jiwoo.back.taxaxtion.service;
 
-import org.jiwoo.back.taxation.service.HomeTaxServiceImpl;
+import org.jiwoo.back.taxation.service.HomeTaxAPIServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 public class HomeTaxServiceTest {
 
     @Autowired
-    private HomeTaxServiceImpl homeTaxService;
+    private HomeTaxAPIServiceImpl homeTaxService;
 
     @Autowired
     @Qualifier("defaultTemplate")
