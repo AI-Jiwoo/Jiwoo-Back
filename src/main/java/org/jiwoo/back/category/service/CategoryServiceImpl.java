@@ -5,7 +5,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class CategoryServiceImpl implements CategoryService {
@@ -22,4 +21,12 @@ public class CategoryServiceImpl implements CategoryService {
         List<String> categoryNames = categoryRepository.findCategoryNamesByBusinessId(businessId);
         return categoryNames.isEmpty() ? "카테고리 없음" : String.join(", ", categoryNames);
     }
+
+    /* 설명. 카테고리 이름 전체조회 */
+    @Override
+    public List<String> getAllCategoryNames() {
+        return categoryRepository.findAllCategoryNames();
+    }
+
+
 }

@@ -8,6 +8,7 @@ import lombok.AllArgsConstructor;
 import org.jiwoo.back.accelerating.aggregate.entity.MarketResearch;
 import org.jiwoo.back.user.aggregate.entity.User;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -68,6 +69,6 @@ public class Business {
     private List<MarketResearch> marketResearches;
 
     @OneToMany(mappedBy = "business", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<BusinessCategory> businessCategories;
+    private List<BusinessCategory> businessCategories = new ArrayList<>();
 }
 

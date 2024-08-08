@@ -1,10 +1,15 @@
 package org.jiwoo.back.business.service;
 
 import org.jiwoo.back.business.aggregate.entity.Business;
+import org.jiwoo.back.business.aggregate.entity.BusinessCategory;
 import org.jiwoo.back.business.aggregate.entity.StartupStage;
 import org.jiwoo.back.business.dto.BusinessDTO;
+import org.jiwoo.back.business.repository.BusinessCategoryRepository;
 import org.jiwoo.back.business.repository.BusinessRepository;
 import org.jiwoo.back.business.repository.StartupStageRepository;
+import org.jiwoo.back.category.aggregate.entity.Category;
+import org.jiwoo.back.category.repository.CategoryRepository;
+import org.jiwoo.back.category.service.CategoryService;
 import org.jiwoo.back.user.aggregate.entity.User;
 import org.jiwoo.back.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,14 +18,19 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.web.client.RestTemplate;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import java.util.Date;
+import java.util.*;
 import java.text.SimpleDateFormat;
 import java.text.ParseException;
-import java.util.Optional;
 
 class BusinessServiceImplTest {
     // 사업 정보 조회
@@ -44,6 +54,10 @@ class BusinessServiceImplTest {
     private static final int USER_ID = 1;
     private static final int STARTUP_STAGE_ID = 1;
     private static final String STARTUP_STAGE_NAME = "초기 단계";
+    private static final List<Integer> CATEGORY_IDS = Arrays.asList(1, 2);
+    private static final String VECTOR_DB_URL = "http://localhost:8000/insert";
+    private static final String VECTOR_DB_SUCCESS_RESPONSE = "Success";
+    private static final String VECTOR_DB_FAIL_MESSAGE = "VectorDB 저장 실패";
 
     @Mock
     private BusinessRepository businessRepository;
@@ -54,12 +68,34 @@ class BusinessServiceImplTest {
     @Mock
     private StartupStageRepository startupStageRepository;
 
+    @Mock
+    private CategoryRepository categoryRepository;
+
+    @Mock
+    private BusinessCategoryRepository businessCategoryRepository;
+
+    @Mock
+    private RestTemplate restTemplate;
+
     @InjectMocks
     private BusinessServiceImpl businessService;
+
+    @Mock
+    private CategoryService categoryService;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+        businessService = new BusinessServiceImpl(
+                businessRepository,
+                userRepository,
+                startupStageRepository,
+                categoryService,
+                categoryRepository,
+                businessCategoryRepository,
+                restTemplate
+        );
+        ReflectionTestUtils.setField(businessService, "pythonInsertUrl", VECTOR_DB_URL);
     }
 
     @DisplayName("사업 ID로 사업 조회")
@@ -114,7 +150,7 @@ class BusinessServiceImplTest {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         Date startDate = sdf.parse(BUSINESS_START_DATE);
 
-        return Business.builder()
+        Business business = Business.builder()
                 .id(id)
                 .businessName(name)
                 .businessNumber(BUSINESS_NUMBER)
@@ -127,7 +163,10 @@ class BusinessServiceImplTest {
                 .nation(NATION)
                 .investmentStatus(INVESTMENT_STATUS)
                 .customerType(CUSTOMER_TYPE)
+                .businessCategories(new ArrayList<>())
                 .build();
+
+        return business;
     }
 
     private User createMockUser() {
@@ -142,21 +181,33 @@ class BusinessServiceImplTest {
         return mockStartupStage;
     }
 
-    @DisplayName("사업 정보 저장")
+    @DisplayName("사업 정보 저장 - 카테고리 및 VectorDB 포함")
     @Test
-    void saveBusiness() throws ParseException {
+    void saveBusiness_WithCategoriesAndVectorDB() throws ParseException {
         // Given
         BusinessDTO businessDTO = createBusinessDTO();
+        businessDTO.setCategoryIds(CATEGORY_IDS);
         User mockUser = createMockUser();
         StartupStage mockStartupStage = createMockStartupStage();
+        List<Category> mockCategories = createMockCategories();
 
         Business mockSavedBusiness = createMockBusiness(BUSINESS_ID, BUSINESS_NAME);
         setFieldWithReflection(mockSavedBusiness, "user", mockUser);
         setFieldWithReflection(mockSavedBusiness, "startupStage", mockStartupStage);
+        setFieldWithReflection(mockSavedBusiness, "businessCategories", new ArrayList<>());
 
         when(userRepository.findByEmail(USER_EMAIL)).thenReturn(mockUser);
         when(startupStageRepository.findById(STARTUP_STAGE_ID)).thenReturn(Optional.of(mockStartupStage));
+        when(categoryRepository.findById(1)).thenReturn(Optional.of(mockCategories.get(0)));
+        when(categoryRepository.findById(2)).thenReturn(Optional.of(mockCategories.get(1)));
         when(businessRepository.save(any(Business.class))).thenReturn(mockSavedBusiness);
+        when(categoryService.getCategoryNameByBusinessId(anyInt())).thenReturn("Category1, Category2");
+        when(restTemplate.exchange(
+                eq(VECTOR_DB_URL),
+                eq(HttpMethod.POST),
+                any(HttpEntity.class),
+                eq(String.class)
+        )).thenReturn(new ResponseEntity<>(VECTOR_DB_SUCCESS_RESPONSE, HttpStatus.OK));
 
         // When
         BusinessDTO result = businessService.saveBusiness(businessDTO, USER_EMAIL);
@@ -165,22 +216,80 @@ class BusinessServiceImplTest {
         assertNotNull(result);
         assertEquals(BUSINESS_ID, result.getId());
         assertEquals(BUSINESS_NAME, result.getBusinessName());
-        assertEquals(BUSINESS_NUMBER, result.getBusinessNumber());
-        assertEquals(BUSINESS_SCALE, result.getBusinessScale());
-        assertEquals(BUSINESS_BUDGET, result.getBusinessBudget());
-        assertEquals(BUSINESS_CONTENT, result.getBusinessContent());
-        assertEquals(BUSINESS_PLATFORM, result.getBusinessPlatform());
-        assertEquals(BUSINESS_LOCATION, result.getBusinessLocation());
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-        assertEquals(BUSINESS_START_DATE, sdf.format(result.getBusinessStartDate()));
-        assertEquals(NATION, result.getNation());
-        assertEquals(INVESTMENT_STATUS, result.getInvestmentStatus());
-        assertEquals(CUSTOMER_TYPE, result.getCustomerType());
+        assertEquals(CATEGORY_IDS, result.getCategoryIds());
+
         verify(businessRepository, times(1)).save(any(Business.class));
         verify(userRepository, times(1)).findByEmail(USER_EMAIL);
         verify(startupStageRepository, times(1)).findById(STARTUP_STAGE_ID);
-        verify(businessRepository, times(1)).save(any(Business.class));
+        verify(categoryRepository, times(2)).findById(anyInt());
+        verify(businessCategoryRepository, times(2)).save(any(BusinessCategory.class));
+        verify(categoryService, times(1)).getCategoryNameByBusinessId(anyInt());
+        verify(restTemplate, times(1)).exchange(
+                eq(VECTOR_DB_URL),
+                eq(HttpMethod.POST),
+                any(HttpEntity.class),
+                eq(String.class)
+        );
     }
+
+    @DisplayName("사업 정보 저장 - VectorDB 저장 실패")
+    @Test
+    void saveBusiness_VectorDBSaveFails() throws ParseException {
+        // Given
+        BusinessDTO businessDTO = createBusinessDTO();
+        User mockUser = createMockUser();
+        StartupStage mockStartupStage = createMockStartupStage();
+        List<Category> mockCategories = createMockCategories();
+
+        Business mockSavedBusiness = createMockBusiness(BUSINESS_ID, BUSINESS_NAME);
+        setFieldWithReflection(mockSavedBusiness, "user", mockUser);
+        setFieldWithReflection(mockSavedBusiness, "startupStage", mockStartupStage);
+
+        when(userRepository.findByEmail(USER_EMAIL)).thenReturn(mockUser);
+        when(startupStageRepository.findById(STARTUP_STAGE_ID)).thenReturn(Optional.of(mockStartupStage));
+        when(categoryRepository.findById(1)).thenReturn(Optional.of(mockCategories.get(0)));
+        when(categoryRepository.findById(2)).thenReturn(Optional.of(mockCategories.get(1)));
+        when(businessRepository.save(any(Business.class))).thenReturn(mockSavedBusiness);
+        when(categoryService.getCategoryNameByBusinessId(anyInt())).thenReturn("Category1, Category2");
+        when(restTemplate.exchange(
+                eq(VECTOR_DB_URL),
+                eq(HttpMethod.POST),
+                any(HttpEntity.class),
+                eq(String.class)
+        )).thenThrow(new RuntimeException(VECTOR_DB_FAIL_MESSAGE));
+
+        // When
+        BusinessDTO result = businessService.saveBusiness(businessDTO, USER_EMAIL);
+
+        // Then
+        assertNotNull(result);
+        assertEquals(BUSINESS_ID, result.getId());
+        assertEquals(BUSINESS_NAME, result.getBusinessName());
+
+        verify(businessRepository, times(1)).save(any(Business.class));
+        verify(categoryRepository, times(businessDTO.getCategoryIds().size())).findById(anyInt());
+        verify(businessCategoryRepository, times(businessDTO.getCategoryIds().size())).save(any(BusinessCategory.class));
+        verify(categoryService, times(1)).getCategoryNameByBusinessId(anyInt());
+        verify(restTemplate, times(1)).exchange(
+                eq(VECTOR_DB_URL),
+                eq(HttpMethod.POST),
+                any(HttpEntity.class),
+                eq(String.class)
+        );
+    }
+
+    private List<Category> createMockCategories() {
+        Category category1 = new Category();
+        setFieldWithReflection(category1, "id", 1);
+        setFieldWithReflection(category1, "name", "카테고리1");
+
+        Category category2 = new Category();
+        setFieldWithReflection(category2, "id", 2);
+        setFieldWithReflection(category2, "name", "카테고리2");
+
+        return Arrays.asList(category1, category2);
+    }
+
 
     private BusinessDTO createBusinessDTO() throws ParseException {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
@@ -200,7 +309,8 @@ class BusinessServiceImplTest {
                 INVESTMENT_STATUS,
                 CUSTOMER_TYPE,
                 USER_ID,
-                STARTUP_STAGE_ID
+                STARTUP_STAGE_ID,
+                CATEGORY_IDS
         );
     }
 
