@@ -1,6 +1,7 @@
 package org.jiwoo.back.taxaxtion.service;
 
-import org.jiwoo.back.taxation.service.HomeTaxInfoServiceImpl;
+import org.jiwoo.back.taxation.service.IncomeTaxServiceImpl;
+import org.jiwoo.back.taxation.service.VATServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -20,7 +21,10 @@ import static org.junit.jupiter.api.Assertions.*;
 public class HomeTaxInfoServiceTest {
 
     @InjectMocks
-    private HomeTaxInfoServiceImpl homeTaxInfoService;
+    private VATServiceImpl vatService;
+
+    @InjectMocks
+    private IncomeTaxServiceImpl incomeTaxService;
 
     @Qualifier("defaultTemplate")
     @Autowired
@@ -35,26 +39,52 @@ public class HomeTaxInfoServiceTest {
     @Test
     void testGetVATInfo() {
 
-        //주기적 업데이트 실행
-        homeTaxInfoService.updateTaxRates();
+        // 주기적 업데이트 실행
+        vatService.updateVATRates();
 
-        //given
-        //when
-        List<Map<String, String>> taxRates = homeTaxInfoService.getVATInfo();
+        // given
+        // when
+        Map<String, List<Map<String, String>>> vatInfo = vatService.getVATInfo();
 
         // then
-        assertNotNull(taxRates);
-        assertTrue(!taxRates.isEmpty(), "부가가치세 정보가 비어있습니다.");
-        taxRates.forEach(rate -> {
+//        assertNotNull(vatInfo, "vatInfo is null");
+//        assertTrue(vatInfo.containsKey("regularVat"), "일반 과세자 정보가 없습니다.");
+//        assertTrue(vatInfo.containsKey("simplifiedVat"), "간이 과세자 정보가 없습니다.");
+
+        List<Map<String, String>> regularVatRates = vatInfo.get("regularVat");
+        List<Map<String, String>> simplifiedVatRates = vatInfo.get("simplifiedVat");
+
+        System.out.println("일반 과세자 정보: " + regularVatRates);
+        System.out.println("간이 과세자 정보: " + simplifiedVatRates);
+
+        // 로그 추가
+        System.out.println("테스트 - 일반 과세자 정보 크기: " + regularVatRates.size());
+        System.out.println("테스트 - 간이 과세자 정보 크기: " + simplifiedVatRates.size());
+
+        assertFalse(regularVatRates.isEmpty(), "일반 과세자 정보가 비어있습니다.");
+        assertFalse(simplifiedVatRates.isEmpty(), "간이 과세자 정보가 비어있습니다.");
+
+        // 일반 과세자 정보 검증
+        regularVatRates.forEach(rate -> {
             assertNotNull(rate.get("category"), "category가 null입니다.");
             assertNotNull(rate.get("description"), "description이 null입니다.");
             assertNotNull(rate.get("tax_rate"), "tax_rate가 null입니다.");
+            assertEquals("일반과세자", rate.get("vatType"), "vatType이 일반과세자가 아닙니다.");
+        });
+
+        // 간이 과세자 정보 검증
+        simplifiedVatRates.forEach(rate -> {
+            assertNotNull(rate.get("category"), "category가 null입니다.");
+            assertNotNull(rate.get("description"), "description이 null입니다.");
+            assertNotNull(rate.get("tax_rate"), "tax_rate가 null입니다.");
+            assertEquals("간이과세자", rate.get("vatType"), "vatType이 간이과세자가 아닙니다.");
         });
 
         // 포맷된 세율 정보 출력
-        String formattedTaxRates = homeTaxInfoService.getFormattedTaxRates("부가가치세");
+        String formattedTaxRates = vatService.getFormattedTaxRates();
         System.out.println(formattedTaxRates);
     }
+
 
     @DisplayName("종합소득세 정보 크롤링 테스트")
     @Test
@@ -62,9 +92,9 @@ public class HomeTaxInfoServiceTest {
         //given
         //when
         //주기적 업데이트 실행
-        homeTaxInfoService.updateTaxRates();
+        incomeTaxService.updateIncomeTaxRates();
 
-        List<Map<String, String>> incomeTaxRates = homeTaxInfoService.getIncomeTaxRates();
+        List<Map<String, String>> incomeTaxRates = incomeTaxService.getIncomeTaxRates();
 
         //then
         assertNotNull(incomeTaxRates);
@@ -79,7 +109,7 @@ public class HomeTaxInfoServiceTest {
         });
 
         //포맷된 세율 정보 출력
-        String formattedTaxRates = homeTaxInfoService.getFormattedTaxRates("종합소득세");
+        String formattedTaxRates = incomeTaxService.getFormattedTaxRates("종합소득세");
         System.out.println(formattedTaxRates);
 
     }

@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
         "homeTax.api.serviceKey=kvgT%2B316qbwLqJX%2BTsbj7RYPfTFsRdBeGaG1k%2FDNvE8S2Tmf3JhNWUeLlLqgK9wBqpDjwIEULkkJCZCxa292hQ%3D%3D",
         "homeTax.api.authorization=kvgT+316qbwLqJX+Tsbj7RYPfTFsRdBeGaG1k/DNvE8S2Tmf3JhNWUeLlLqgK9wBqpDjwIEULkkJCZCxa292hQ=="
 })
-public class HomeTaxServiceTest {
+public class HomeTaxAPIServiceTest {
 
     @Autowired
     private HomeTaxAPIServiceImpl homeTaxService;

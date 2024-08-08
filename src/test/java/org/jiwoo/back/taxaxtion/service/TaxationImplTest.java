@@ -4,7 +4,6 @@ import org.jiwoo.back.common.exception.OpenAIResponseFailException;
 import org.jiwoo.back.taxation.dto.FileDTO;
 import org.jiwoo.back.taxation.dto.TaxationDTO;
 import org.jiwoo.back.taxation.service.HomeTaxAPIServiceImpl;
-import org.jiwoo.back.taxation.service.HomeTaxInfoServiceImpl;
 import org.jiwoo.back.taxation.service.TaxationService;
 import org.jiwoo.back.taxation.service.TaxationServiceImpl;
 import org.junit.jupiter.api.Assertions;
@@ -26,8 +25,8 @@ public class TaxationImplTest {
     @Autowired
     private HomeTaxAPIServiceImpl homeTaxAPIService;
 
-    @Autowired
-    private HomeTaxInfoServiceImpl homeTaxInfoService;
+//    @Autowired
+//    private HomeTaxInfoServiceImpl homeTaxInfoService;
     @Autowired
     private TaxationServiceImpl taxationServiceImpl;
 
@@ -353,16 +352,16 @@ public class TaxationImplTest {
 
         taxationDTO.setIncomeTaxProof(incomeTaxProof);
 
-        List<Map<String, String>> incomeTaxRates = homeTaxInfoService.getIncomeTaxRates();
-        String formattedIncomeTaxRates = homeTaxInfoService.getFormattedTaxRates("부가가치세");
-        System.out.println("종합소득세 : " + formattedIncomeTaxRates);
-
-        List<Map<String, String>> vatInfo = homeTaxInfoService.getVATInfo();
-        String formattedVatInfo = homeTaxInfoService.getFormattedTaxRates("부가가치세");
-        System.out.println("부가가치세 : " + formattedVatInfo);
-
-        taxationDTO.setIncomeRates(formattedIncomeTaxRates);   //종합소득세 정보
-        taxationDTO.setVatInfo(formattedVatInfo);       //부가가치세 정보
+//        List<Map<String, String>> incomeTaxRates = homeTaxInfoService.getIncomeTaxRates();
+//        String formattedIncomeTaxRates = homeTaxInfoService.getFormattedTaxRates("부가가치세");
+//        System.out.println("종합소득세 : " + formattedIncomeTaxRates);
+//
+//        Map<String, List<Map<String, String>>> vatInfo = homeTaxInfoService.getVATInfo();
+//        String formattedVatInfo = homeTaxInfoService.getFormattedTaxRates("부가가치세");
+//        System.out.println("부가가치세 : " + formattedVatInfo);
+//
+//        taxationDTO.setIncomeRates(formattedIncomeTaxRates);   //종합소득세 정보
+//        taxationDTO.setVatInfo(formattedVatInfo);       //부가가치세 정보
 
 //        System.out.println(taxationDTO);
 
