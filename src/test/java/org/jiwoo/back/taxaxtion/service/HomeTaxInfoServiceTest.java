@@ -109,7 +109,7 @@ public class HomeTaxInfoServiceTest {
         });
 
         //포맷된 세율 정보 출력
-        String formattedTaxRates = incomeTaxService.getFormattedTaxRates("종합소득세");
+        String formattedTaxRates = incomeTaxService.getFormattedTaxRates();
         System.out.println(formattedTaxRates);
 
     }

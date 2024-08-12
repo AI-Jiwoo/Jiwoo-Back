@@ -11,7 +11,6 @@ import java.sql.Date;
 @ToString
 public class TaxationResponseDTO {
 
-
     private double totalSales;         // 총 매출액
     private double grossIncome;        // 총 소득
     private double netSales;           // 순 매출액

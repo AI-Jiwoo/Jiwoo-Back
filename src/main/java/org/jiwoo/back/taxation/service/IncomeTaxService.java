@@ -5,7 +5,9 @@ import java.util.Map;
 
 public interface IncomeTaxService {
 
+    void updateIncomeTaxRates();
+
     List<Map<String, String>> getIncomeTaxRates();
 
-    String getFormattedTaxRates(String category);
+    String getFormattedTaxRates();
 }

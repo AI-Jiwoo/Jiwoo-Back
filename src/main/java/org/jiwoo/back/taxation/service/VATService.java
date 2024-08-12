@@ -5,6 +5,8 @@ import java.util.Map;
 
 public interface VATService {
 
+    void updateVATRates();
+
     Map<String, List<Map<String, String>>> getVATInfo();
 
     String getFormattedTaxRates();

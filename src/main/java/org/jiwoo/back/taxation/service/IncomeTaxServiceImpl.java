@@ -45,6 +45,7 @@ public class IncomeTaxServiceImpl implements IncomeTaxService {
     }
 
     // 종합소득세 정보 업데이트 (매일 자정에 실행)
+    @Override
     @Scheduled(cron = "0 0 0 * * ?")
     public void updateIncomeTaxRates() {
         String url = "https://www.nts.go.kr/nts/cm/cntnts/cntntsView.do?mi=2227&cntntsId=7667";
@@ -119,8 +120,7 @@ public class IncomeTaxServiceImpl implements IncomeTaxService {
                 String dateText = matcher.group();
                 log.info("\n*****YYYY.MM.DD 형식 : " + dateText);
                 return Optional.of(LocalDate.parse(dateText, DATE_FORMATTER));
-            }
-            else if(category.equals("종합소득세")){  //종합소득세의 경우 연도 범위를 찾음
+            } else if (category.equals("종합소득세")) {  //종합소득세의 경우 연도 범위를 찾음
 
                 log.info("\n*****종합소득세 날짜 찾기");
                 pattern = Pattern.compile("\\d{4}");
@@ -140,7 +140,7 @@ public class IncomeTaxServiceImpl implements IncomeTaxService {
                         int year = years.get(0);
                         if (year == currentYear) {
                             log.info("\n***** 현재 연도랑 똑같음");
-                        }else{
+                        } else {
                             log.info("\n***** 현재 연도랑 다름");
                         }
                         return Optional.of(LocalDate.of(year, 1, 1));
@@ -163,7 +163,6 @@ public class IncomeTaxServiceImpl implements IncomeTaxService {
         }
         return Optional.empty();
     }
-
 
 
     // 종합소득세 테이블에서 세율 추출
@@ -193,22 +192,21 @@ public class IncomeTaxServiceImpl implements IncomeTaxService {
 
     // 문자열로 반환
     @Override
-    public String getFormattedTaxRates(String category) {
+    public String getFormattedTaxRates() {
         StringBuilder sb = new StringBuilder();
         sb.append("현재 날짜: ").append(LocalDate.now()).append("\n");
 
-        if(category.equals("종합소득세")){
-            if (latestIncomeTaxDate != null) {
-                sb.append("종합소득세 - ").append(latestIncomeTaxYear).append(" 기준\n");
-                for (Map<String, String> rate : incomeTaxRates) {
-                    sb.append("과세표준: ").append(rate.get("description"))
-                            .append(", 세율: ").append(rate.get("tax_rate"));
-                    if (rate.containsKey("additional_info")) {
-                        sb.append(", 누진공세: ").append(rate.get("additional_info"));
-                    }
-                    sb.append("\n");
+        if (latestIncomeTaxDate != null) {
+            sb.append("종합소득세 - ").append(latestIncomeTaxYear).append(" 기준\n");
+            for (Map<String, String> rate : incomeTaxRates) {
+                sb.append("과세표준: ").append(rate.get("description"))
+                        .append(", 세율: ").append(rate.get("tax_rate"));
+                if (rate.containsKey("additional_info")) {
+                    sb.append(", 누진공세: ").append(rate.get("additional_info"));
                 }
+                sb.append("\n");
             }
+
         }
 
         return sb.toString();

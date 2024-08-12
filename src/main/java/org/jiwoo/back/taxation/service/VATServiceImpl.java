@@ -19,7 +19,7 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-@Service
+@Service("VATService")
 @Slf4j
 public class VATServiceImpl implements VATService {
 
@@ -45,6 +45,7 @@ public class VATServiceImpl implements VATService {
         return vatInfo;
     }
 
+    @Override
     @Scheduled(cron = "0 0 0 * * ?")
     public void updateVATRates() {
         String url = "https://www.nts.go.kr/nts/cm/cntnts/cntntsView.do?mi=2275&cntntsId=7696";

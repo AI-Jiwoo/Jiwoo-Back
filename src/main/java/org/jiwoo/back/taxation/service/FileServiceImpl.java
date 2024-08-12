@@ -1,5 +1,6 @@
 package org.jiwoo.back.taxation.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
@@ -20,6 +21,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 @Service
+@Slf4j
 public class FileServiceImpl implements FileService {
 
 
@@ -27,14 +29,23 @@ public class FileServiceImpl implements FileService {
     @Override
     public List<String> preprocessTransactionFiles(List<MultipartFile> transactionFiles) throws Exception {
 
+        log.info("거래내역 파일 처리 시작");
+
         List<String> processedFiles = new ArrayList<>();
 
-        for(MultipartFile file : transactionFiles){
-            String fileName = file.getOriginalFilename();
+        log.info("fileSize : " + transactionFiles.size());
 
-            if (fileName == null) {
+        for(int i = 0; i < transactionFiles.size(); i++){
+
+            MultipartFile file = transactionFiles.get(i);
+
+            String fileName = file.getName();
+            log.info("거래내역 fileName : " + file.getName());
+
+            if (fileName.isEmpty()) {
                 throw new IllegalArgumentException("파일 이름이 존재하지 않습니다.");
             }
+            log.info("fileName : " + fileName);
 
             //확장자 가져오기
             String fileExtension = getFileExtension(fileName);
@@ -42,16 +53,24 @@ public class FileServiceImpl implements FileService {
             //확장자에 따라 다르게 처리
             try (InputStream inputStream = file.getInputStream()) {
                 processedFiles.add(processFileByExtension(fileExtension, inputStream));
+                log.info("파일 하나 확장자 처리했어");
             }
+            log.info("=========파일 텍스트화 완료========" + transactionFiles.get(i).getName());
+            log.info("총 파일 수 : " + transactionFiles.size());
         }
         return processedFiles;
     }
 
+    @Override
     // 세액/소득공제 파일 전처리
     public String preprocessIncomeTaxProofFiles(MultipartFile incomeTaxProofFile) throws Exception {
-        String fileName = incomeTaxProofFile.getOriginalFilename();
 
-        if (fileName == null) {
+        log.info("소득/세액공제 파일 처리 시작");
+
+        String fileName = incomeTaxProofFile.getName();
+        log.info("소득/세액공제 fileName : " + fileName);
+
+        if (fileName.isEmpty()) {
             throw new IllegalArgumentException("파일 이름이 존재하지 않습니다.");
         }
 
@@ -68,9 +87,17 @@ public class FileServiceImpl implements FileService {
     private String getFileExtension(String fileName) {
 
         int dotIndex = fileName.lastIndexOf(".");
+
+        log.info("getFileExtension 파일 dot index : " + dotIndex);
+        log.info("getFIleExtension 파일 이름 : " + fileName);
+
         if (dotIndex == -1 || dotIndex == fileName.length() - 1) {
+            log.info("*****파일 dotIndex : " + dotIndex);
+            log.info("*****파일 dotIndex == fileName.length()-1 : " + (dotIndex == fileName.length()-1));
             throw new IllegalArgumentException("파일의 확장자가 올바르지 않습니다. " + fileName);
         }
+
+        log.info("==================================파일 하나 확장자 변경===================================");
         return fileName.substring(dotIndex + 1);
     }
 
@@ -78,14 +105,19 @@ public class FileServiceImpl implements FileService {
     private String processFileByExtension(String fileExtension, InputStream inputStream) throws IOException {
         switch (fileExtension.toLowerCase()) {
             case "xlsx":
+                log.info("xlsx 파일 텍스트화 완료");
                 return preprocessXlsxInputStream(inputStream);
             case "xls":
+                log.info("xls 파일 텍스트화 완료");
                 return preprocessXlsInputStream(inputStream);
             case "pdf":
+                log.info("pdf 파일 텍스트화 완료");
                 return preprocessPDFInputStream(inputStream);
             case "csv":
+                log.info("csv 파일 텍스트화 완료");
                 return preprocessCsvInputStream(inputStream);
             case "zip":
+                log.info("zip 파일 텍스트화 완료");
                 return preprocessZipFile(inputStream);
             default:
                 throw new IllegalArgumentException("지원하지 않는 파일 타입입니다. : " + fileExtension);
