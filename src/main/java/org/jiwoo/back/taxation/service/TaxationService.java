@@ -3,6 +3,7 @@ package org.jiwoo.back.taxation.service;
 import org.jiwoo.back.business.dto.BusinessDTO;
 import org.jiwoo.back.common.exception.OpenAIResponseFailException;
 import org.jiwoo.back.taxation.dto.TaxationDTO;
+import org.jiwoo.back.taxation.dto.TaxationResponseDTO;
 import org.jiwoo.back.user.dto.AuthDTO;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -14,10 +15,10 @@ public interface TaxationService {
     AuthDTO findByBusinessCode(BusinessDTO businessDTO);
 
     // 세무처리
-    String getTaxation(List<MultipartFile> transactionFiles,
-                       MultipartFile incomeTaxProof,
-                       int businessId,
-                       String bank) throws Exception;
+    TaxationResponseDTO getTaxation(List<MultipartFile> transactionFiles,
+                                    MultipartFile incomeTaxProof,
+                                    int businessId,
+                                    String bank) throws Exception;
 
     // gpt 요청 및 응답
     String getGPTResponse(TaxationDTO taxationDTO) throws OpenAIResponseFailException;

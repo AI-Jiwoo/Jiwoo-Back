@@ -1,5 +1,7 @@
 package org.jiwoo.back.taxation.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.jiwoo.back.business.aggregate.entity.Business;
 import org.jiwoo.back.business.dto.BusinessDTO;
@@ -9,32 +11,45 @@ import org.jiwoo.back.common.OpenAI.service.OpenAIService;
 import org.jiwoo.back.common.exception.OpenAIResponseFailException;
 import org.jiwoo.back.taxation.aggregate.entity.Taxation;
 import org.jiwoo.back.taxation.dto.FileDTO;
+import org.jiwoo.back.taxation.dto.SimpleTransactionDTO;
 import org.jiwoo.back.taxation.dto.TaxationDTO;
+import org.jiwoo.back.taxation.dto.TaxationResponseDTO;
 import org.jiwoo.back.user.aggregate.entity.User;
 import org.jiwoo.back.user.dto.AuthDTO;
 import org.jiwoo.back.user.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.*;
 import java.math.BigDecimal;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.sql.Date;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.concurrent.CompletableFuture;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 
 import static java.time.LocalTime.now;
 
 @Service
 @Slf4j
-public class TaxationServiceImpl implements TaxationService{
+public class TaxationServiceImpl implements TaxationService {
+
+    @Value("${python.server.url.taxation}")
+    private String pythonServerUrl;
 
     private UserRepository userRepository;
     private BusinessRepository businessRepository;
@@ -82,20 +97,107 @@ public class TaxationServiceImpl implements TaxationService{
     // 세무처리
     @Transactional(readOnly = true)
     @Override
-    public String getTaxation(List<MultipartFile> transactionFiles,
-                              MultipartFile incomeTaxProof,
-                              int businessId,
-                              String bank) throws Exception {
+    public TaxationResponseDTO getTaxation(List<MultipartFile> transactionFiles,
+                                           MultipartFile incomeTaxProof,
+                                           int businessId,
+                                           String bank) throws Exception {
 
         TaxationDTO taxationDTO = dataToDTO(transactionFiles, incomeTaxProof, businessId, bank);
 
-        String gptResponse = getGPTResponse(taxationDTO);
-        log.info("\n**** GPT Response : " + gptResponse);
+        // Python 서버로 데이터 전송
+        String pythonResponse = sendToPythonServer(taxationDTO);
 
-        return gptResponse;
+        // 응답 처리 및 파싱
+        TaxationResponseDTO taxationResponseDTO = parseResponse(pythonResponse);
+
+
+// gpt 직접 호출 (java)
+//        String gptResponse = getGPTResponse(taxationDTO);
+//        log.info("\n**** GPT Response : " + gptResponse);
+
+//        return gptResponse;
+        return taxationResponseDTO;
     }
 
-    //Data -> DTO
+
+    // Python 서버
+    public String sendToPythonServer(TaxationDTO taxationDTO) throws IOException {
+
+        // Python 서버 URL 설정
+        URL url = new URL(pythonServerUrl);
+        HttpURLConnection conn = null;
+        int maxRetries = 3;
+        int attempts = 0;
+        String response = null;
+
+        while (attempts < maxRetries) {
+
+            try {
+                conn = (HttpURLConnection) url.openConnection();
+
+                conn.setRequestMethod("POST");
+                conn.setRequestProperty("Content-Type", "application/json; utf-8");
+                conn.setConnectTimeout(5000);   // 연결 타임아웃
+                conn.setReadTimeout(5000);      // 읽기 타임아웃
+                conn.setDoOutput(true);
+
+                // DTO -> JSON
+                String jsonInputString = convertDTOToJSON(taxationDTO);
+
+                try (OutputStream os = conn.getOutputStream()) {
+                    byte[] input = jsonInputString.getBytes("utf-8");
+                    os.write(input, 0, input.length);
+                }
+
+                int responseCode = conn.getResponseCode();
+                if (responseCode == HttpURLConnection.HTTP_OK) {
+                    // 응답 받기
+                    try (BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream(), "utf-8"))) {
+                        StringBuilder responseBuilder = new StringBuilder();
+                        String responseLine;
+
+                        while ((responseLine = br.readLine()) != null) {
+                            responseBuilder.append(responseLine.trim());
+                        }
+
+                        response = responseBuilder.toString();
+                    }
+
+                    break; // 요청 성공
+                } else {
+                    log.error("\n😢 파이썬 서버 접속 실패 : " + responseCode);
+                }
+            } catch (IOException e) {
+                attempts++;
+                log.warn("시도 : " + attempts + " 번 실패. 재시도중...", e);
+
+                if (attempts >= maxRetries) {
+                    throw new IOException("\n😢파이썬 서버에 요청 보내기 실패 : " + maxRetries + " 번쨰 시도.", e);
+                }
+
+                try {
+                    //재시도 전 대기
+                    Thread.sleep(2000);
+                } catch (InterruptedException ex) {
+                    throw new IOException("\n😢Thread was interrupted during retry wait time", ex);
+                }
+            } finally {
+                if (conn != null) {
+                    conn.disconnect();
+                }
+            }
+        }
+
+        if (response == null) {
+            throw new IOException("\n😢파이썬으로부터 올바른 응답 받기 실패.");
+        }
+
+        return response;
+    }
+
+
+
+    //Input Data -> DTO
     @Transactional(readOnly = true, propagation = Propagation.REQUIRES_NEW)
     public TaxationDTO dataToDTO(List<MultipartFile> transactionFiles,
                                  MultipartFile incomeTaxProof,
@@ -118,11 +220,6 @@ public class TaxationServiceImpl implements TaxationService{
         taxationDTO.setBusinessCode(businessDTO.getBusinessNumber());
         taxationDTO.setBusinessContent(businessDTO.getBusinessContent());
 
-        //사업자등록번호로 사업자 유형 조회
-        String businessType = findBusinessType(businessDTO.getBusinessNumber());
-        log.info("\n***** 사업자 유형 조회했어");
-        taxationDTO.setBusinessType(businessType);
-
         // 은행 정보
         taxationDTO.setBank(bank);
 
@@ -130,28 +227,95 @@ public class TaxationServiceImpl implements TaxationService{
         taxationDTO.setCurrentDate(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
         log.info("\n***** 현재 날짜 저장했어");
 
-        // 부가가치세 정보
-        vatService.updateVATRates();
-        String vatInfo = vatService.getFormattedTaxRates();
-        log.info("\n*****부가가치세 정보 : {}", vatInfo);
-        taxationDTO.setCurrentDate(vatInfo);
+        // 비동기 작업 : 사업자등록번호로 사업자 유형 조회
+        CompletableFuture<String> businessTypeFuture = CompletableFuture.supplyAsync(() ->{
+            try{
 
-        // 종합소득세 정보
-        incomeTaxService.updateIncomeTaxRates();
-        String incomeRates = incomeTaxService.getFormattedTaxRates();
-        log.info("\n*****종합소득세 정보 : {}", incomeRates);
-        taxationDTO.setIncomeRates(incomeRates);
+                return findBusinessType(businessDTO.getBusinessNumber());
+            }catch(Exception e){
+                log.error("사업자 유형 정보 조회 실패 : ", e);
+                return "부가가치세 일반과세자";
+            }
+        }).exceptionally(ex -> {
+            log.error("사업자 유형 조회 중 예외 발생 : ", ex);
+            return "부가가치세 일반과세자";
+        });
+
+        // 비동기 작업 : 종합소득세 정보
+        CompletableFuture<String> incomeRatesFuture = CompletableFuture.supplyAsync(()->{
+            try{
+                incomeTaxService.updateIncomeTaxRates();
+                return incomeTaxService.getFormattedTaxRates();
+            }catch (Exception e){
+                log.error("종합소득세 정보 조회 실패 : ", e);
+                return null;
+            }
+        }).exceptionally(ex -> {
+            log.error("종합소득세 정보 조회 중 예외 발생 : " , ex);
+            return null;
+        });
+
+        // 비동기 작업 : 부가가치세 정보
+        CompletableFuture<String> vatInfoFuture = CompletableFuture.supplyAsync(() -> {
+            try{
+                vatService.updateVATRates();
+                return vatService.getFormattedTaxRates();
+            }catch (Exception e){
+                log.error("부가가치세 정보 조회 실패 : ", e);
+                return null;
+            }
+        }).exceptionally(ex -> {
+            log.error("부가가치세 정보 조회 중 예외 발생 : ", ex);
+            return null;
+        });
+
+        // 비동기 작업 완료 후 taxationDTO 에 저장
+        CompletableFuture.allOf(businessTypeFuture, incomeRatesFuture, vatInfoFuture).join();
+
+        taxationDTO.setBusinessType(businessTypeFuture.get());
+        taxationDTO.setIncomeRates(incomeRatesFuture.get());
+        taxationDTO.setVatInfo(vatInfoFuture.get());
 
         log.info("\n*****taxationDTO : " + taxationDTO);
         return taxationDTO;
     }
+
+    // Input DTO -> JSON
+    private String convertDTOToJSON(TaxationDTO taxationDTO) throws JsonProcessingException {
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        // DTO객체를 JSON 문자열로 변환
+        String json = objectMapper.writeValueAsString(taxationDTO);
+
+        return json;
+    }
+
+    // Output JSON -> DTO
+    public TaxationResponseDTO parseResponse(String pythonResponse) throws ParseException {
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        TaxationResponseDTO responseDTO = null;
+
+        try {
+            responseDTO = objectMapper.readValue(pythonResponse, TaxationResponseDTO.class);
+        } catch (JsonProcessingException e) {
+            log.error("\n😢파이썬 서버로부터 JSON 응답을 받는 중 오류 발생 : ", e);
+            throw new RuntimeException("\n😢파이썬 서버로부터 응답 받기 실패 : ", e);
+        }
+
+
+        return responseDTO;
+    }
+
+
+
 
     // 거래내역 파일 텍스트화
     private FileDTO transactionFileToText(List<MultipartFile> transactionFiles) throws Exception {
         List<String> transactionList = fileService.preprocessTransactionFiles(transactionFiles);
 
         FileDTO transactionListDTO = new FileDTO();
-        for(int i = 0; i<transactionList.size(); i++){
+        for (int i = 0; i < transactionList.size(); i++) {
             String transactionFileName = transactionFiles.get(i).getOriginalFilename();
             String transactionFileContent = transactionList.get(i);
 
@@ -205,7 +369,8 @@ public class TaxationServiceImpl implements TaxationService{
                         "   - 사업내용: %s \n" +
                         "4. **부가가치세 정보**: %s \n" +
                         "5. **종합소득세 정보**: %s \n" +
-                        "6. **소득/세액공제 증명서류 (텍스트)**: %s \n" +
+                        "6. ** 총 소득 공제 **: %s \n" +
+                        "7. ** 총 세액 공제 **: %s \n" +
                         "\n" +
                         "**요청사항:**\n" +
                         "\n" +
@@ -219,8 +384,10 @@ public class TaxationServiceImpl implements TaxationService{
                         "   - 총 매출액: ** (만원)\n" +
                         "   - 총 소득: ** (만원)\n" +
                         "   - 순 매출액: ** (만원)\n" +
+                        "   - 총 소득 공제 : ** (만원)\n" +
+                        "   - 총 세액 공제 : ** (만원)\n" +
                         "   - 적자 유무: 흑자 또는 적자\n" +
-                        "   - 세금 절세를 위한 추가 비용: ** (만원)\n" +
+                        "   - 세금 절세를 위한 방법 : **\n" +
                         "\n" +
                         "3. 거래내역의 시작 날짜와 마지막 날짜:\n" +
                         "   - 시작 날짜: YYYY-MM-DD\n" +
@@ -244,54 +411,23 @@ public class TaxationServiceImpl implements TaxationService{
                 /*사업 내용*/ taxationDTO.getBusinessContent(),
                 /*부가가치세 정보*/ taxationDTO.getVatInfo(),
                 /*종합소득세 정보*/ taxationDTO.getIncomeRates(),
-                /*소득/세액공제 내용*/ taxationDTO.getIncomeTaxProof().getContent()
-                );
+                /*소득공제 */ "605,800 원",
+                /*세액공제 */ "9,774,345 원"
+        );
 
-    }
-
-
-    // gpt 응답 데이터 파싱
-    public void parseResponse(String gptResponse, String businessId) throws ParseException {
-
-        String incomeTax = extractValue(gptResponse, "예상 종합소득세:");
-        String totalSales =  extractValue(gptResponse, "총 매출액:");
-        String grossIncome = extractValue(gptResponse, "총 소득:");
-        String netSales = extractValue(gptResponse, "순 매출액");
-        String startDateStr = extractValue(gptResponse, "거래내역의 시작 날짜:");
-        String lastDateStr = extractValue(gptResponse, "거래내역의 마지막 날짜:");
-        String lossStatus = extractValue(gptResponse, "적자 유무:");
-        String additionalTaxSavings = extractValue(gptResponse, "세금 절세를 위한 추가 비용:");
-
-
-        // String을 Date로 변환
-        Date startDate = new Date(dateFormat.parse(startDateStr).getTime());
-        Date lastDate = new Date(dateFormat.parse(lastDateStr).getTime());
-
-
-        /*Taxation taxtion = Taxation.builder()
-                .incomeTax(new BigDecimal(incomeTax))
-                .totalSales(new BigDecimal(totalSales))
-                .grossIncome(new BigDecimal(grossIncome))
-                .netSales(new BigDecimal(netSales))
-                .startDate(startDate)
-                .lastDate(lastDate)
-                .lossStatus(lossStatus)
-                .businessId(businessId)
-                .build();*/
     }
 
     // 파싱 메소드
-    private String extractValue(String gptResponse, String key){
+    private String extractValue(String gptResponse, String key) {
         Pattern pattern = Pattern.compile(key + "\\s*(\\d+\\.?\\d*)");
         Matcher matcher = pattern.matcher(gptResponse);
 
-        if(matcher.find()){
+        if (matcher.find()) {
             return matcher.group(1);
         }
 
         return "0";
     }
-
 
 
 }

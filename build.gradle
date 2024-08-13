@@ -69,6 +69,12 @@ dependencies {
 
 	//Jsoup 라이브러리(홈페이지 크롤링용)
 	implementation 'org.jsoup:jsoup:1.15.3'
+
+	//Jackson 라이브러리(JSON -> DTO)
+	implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.3'
+	implementation 'com.fasterxml.jackson.core:jackson-core:2.13.3'
+	implementation 'com.fasterxml.jackson.core:jackson-annotations:2.13.3'
+
 }
 
 tasks.named('test') {

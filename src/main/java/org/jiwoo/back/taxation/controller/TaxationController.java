@@ -1,9 +1,12 @@
 package org.jiwoo.back.taxation.controller;
 
 import org.jiwoo.back.taxation.aggregate.vo.ResponseTaxationVO;
+import org.jiwoo.back.taxation.dto.TaxationResponseDTO;
 import org.jiwoo.back.taxation.service.FileService;
 import org.jiwoo.back.taxation.service.HomeTaxAPIService;
+import org.jiwoo.back.taxation.service.TaxationService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,11 +23,13 @@ public class TaxationController {
 
     private final HomeTaxAPIService homeTaxAPIService;
     private final FileService fileService;
+    private final TaxationService taxationService;
 
     @Autowired
-    public TaxationController(HomeTaxAPIService homeTaxAPIService, FileService fileService) {
+    public TaxationController(HomeTaxAPIService homeTaxAPIService, FileService fileService, @Qualifier("taxationService") TaxationService taxationService) {
         this.homeTaxAPIService = homeTaxAPIService;
         this.fileService = fileService;
+        this.taxationService = taxationService;
     }
 
     @PostMapping("/file")
@@ -42,4 +47,23 @@ public class TaxationController {
 
         return ResponseEntity.ok().body(responseData);
     }
+
+
+    @PostMapping("/")
+    public ResponseEntity<TaxationResponseDTO> getTaxation(@RequestParam("transactionFiles") List<MultipartFile> transactionFiles,
+                                                           @RequestParam("incomeTaxProof") MultipartFile incomeTaxProof,
+                                                           @RequestParam("businessId") int businessId,
+                                                           @RequestParam("bank") String bank) {
+
+        try{
+
+            TaxationResponseDTO taxationResponseDTO = taxationService.getTaxation(transactionFiles, incomeTaxProof, businessId, bank);
+            return ResponseEntity.ok(taxationResponseDTO);
+        }catch(Exception e){
+            return ResponseEntity.status(500).body(null);
+        }
+
+    }
+
+
 }

@@ -3,6 +3,7 @@ package org.jiwoo.back.taxaxtion.service;
 import org.jiwoo.back.common.exception.OpenAIResponseFailException;
 import org.jiwoo.back.taxation.dto.FileDTO;
 import org.jiwoo.back.taxation.dto.TaxationDTO;
+import org.jiwoo.back.taxation.dto.TaxationResponseDTO;
 import org.jiwoo.back.taxation.service.TaxationService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
@@ -24,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @SpringBootTest
 public class TaxationImplTest {
-
+// gpt java에서 직접 호출할때의 테스트
 
 //    @Autowired
 //    private HomeTaxInfoServiceImpl homeTaxInfoService;
@@ -51,7 +52,7 @@ public class TaxationImplTest {
 
 
         //when
-        String response = taxationService.getTaxation(transactionFiles, incomeTaxProofFile, businessId, bank);
+        TaxationResponseDTO response = taxationService.getTaxation(transactionFiles, incomeTaxProofFile, businessId, bank);
 
 
         //then
