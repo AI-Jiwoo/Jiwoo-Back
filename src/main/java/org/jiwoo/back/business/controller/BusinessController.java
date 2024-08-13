@@ -39,13 +39,7 @@ public class BusinessController {
     /* 설명. 사업 정보 저장 */
     @PostMapping("/regist")
     public ResponseEntity<ResponseBusinessVO> createBusiness(@RequestBody BusinessDTO businessDTO) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !(authentication.getPrincipal() instanceof CustomUserDetails)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new ResponseBusinessVO("인증되지 않은 사용자입니다.", null));
-        }
-
-        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        CustomUserDetails userDetails = (CustomUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         String userEmail = userDetails.getUsername();
 
         try {
@@ -86,8 +80,8 @@ public class BusinessController {
     /* 설명. 사용자 정보로 사업 조회 */
     @GetMapping("/user")
     public ResponseEntity<ResponseBusinessVO> getBusinessesByUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String userEmail = authentication.getName();
+        CustomUserDetails userDetails = (CustomUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        String userEmail = userDetails.getUsername();
         List<BusinessDTO> businesses = businessService.findAllBusinessesByUser(userEmail);
         return ResponseEntity.ok(new ResponseBusinessVO("사용자의 모든 사업자 정보 조회 성공", businesses));
     }
@@ -98,5 +92,18 @@ public class BusinessController {
         List<StartupStage> stages = startupStageRepository.findAll();
         log.info("Available startup stages: {}", stages);
         return ResponseEntity.ok(stages);
+    }
+
+    /* 설명. 현재 사용자의 비즈니스 프로필 조회 */
+    @GetMapping("/profile")
+    public ResponseEntity<ResponseBusinessVO> getCurrentUserBusinessProfile() {
+        try {
+            CustomUserDetails userDetails = (CustomUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            BusinessDTO businessProfile = businessService.getCurrentUserBusinessProfile(userDetails.getUsername());
+            return ResponseEntity.ok(new ResponseBusinessVO("사용자 비즈니스 프로필 조회 성공", List.of(businessProfile)));
+        } catch (Exception e) {
+            log.error("사용자 비즈니스 프로필 조회 실패: 에러 - {}", e.getMessage());
+            return ResponseEntity.badRequest().body(new ResponseBusinessVO("사용자 비즈니스 프로필 조회 실패: " + e.getMessage(), null));
+        }
     }
 }

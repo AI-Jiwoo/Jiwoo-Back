@@ -21,10 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -131,6 +128,21 @@ public class BusinessServiceImpl implements BusinessService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public BusinessDTO getCurrentUserBusinessProfile(String userEmail) {
+        User user = userRepository.findByEmail(userEmail);
+        if (user == null) {
+            throw new RuntimeException("사용자를 찾을 수 없습니다.");
+        }
+
+        Optional<Object> businessOptional = businessRepository.findFirstByUser(user);
+        if (businessOptional.isEmpty()) {
+            throw new RuntimeException("비즈니스 프로필을 찾을 수 없습니다.");
+        }
+
+        return convertToDTO((Business) businessOptional.get());
+    }
+
     private BusinessDTO convertToDTO(Business business) {
         List<Integer> categoryIds = business.getBusinessCategories() != null
                 ? business.getBusinessCategories().stream()
@@ -151,12 +163,11 @@ public class BusinessServiceImpl implements BusinessService {
                 business.getNation(),
                 business.getInvestmentStatus(),
                 business.getCustomerType(),
-                business.getUser().getId(),
-                business.getStartupStage().getId(),
+                business.getUser() != null ? business.getUser().getId() : null,
+                business.getStartupStage() != null ? business.getStartupStage().getId() : null,
                 categoryIds
         );
     }
-
 
     private void saveToVectorDb(Business business) {
         try {

@@ -8,4 +8,5 @@ public interface BusinessService {
     BusinessDTO findBusinessById(int id);
     BusinessDTO saveBusiness(BusinessDTO businessDTO, String userEmail);
     List<BusinessDTO> findAllBusinessesByUser(String userEmail);
+    BusinessDTO getCurrentUserBusinessProfile(String username);
 }
