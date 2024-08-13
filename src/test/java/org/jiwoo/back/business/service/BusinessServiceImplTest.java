@@ -59,6 +59,11 @@ class BusinessServiceImplTest {
     private static final String VECTOR_DB_SUCCESS_RESPONSE = "Success";
     private static final String VECTOR_DB_FAIL_MESSAGE = "VectorDB 저장 실패";
 
+    // 사용자의 비즈니스 프로필 조회
+    private static final String CURRENT_USER_EMAIL = "current@example.com";
+    private static final int CURRENT_USER_BUSINESS_ID = 5;
+    private static final String CURRENT_USER_BUSINESS_NAME = "Current User Business";
+
     @Mock
     private BusinessRepository businessRepository;
 
@@ -150,6 +155,8 @@ class BusinessServiceImplTest {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         Date startDate = sdf.parse(BUSINESS_START_DATE);
 
+        StartupStage mockStartupStage = createMockStartupStage();
+
         Business business = Business.builder()
                 .id(id)
                 .businessName(name)
@@ -164,6 +171,7 @@ class BusinessServiceImplTest {
                 .investmentStatus(INVESTMENT_STATUS)
                 .customerType(CUSTOMER_TYPE)
                 .businessCategories(new ArrayList<>())
+                .startupStage(mockStartupStage)
                 .build();
 
         return business;
@@ -278,6 +286,8 @@ class BusinessServiceImplTest {
         );
     }
 
+
+
     private List<Category> createMockCategories() {
         Category category1 = new Category();
         setFieldWithReflection(category1, "id", 1);
@@ -322,5 +332,47 @@ class BusinessServiceImplTest {
         } catch (NoSuchFieldException | IllegalAccessException e) {
             throw new RuntimeException("Failed to set field value using reflection", e);
         }
+    }
+
+    @DisplayName("현재 사용자의 비즈니스 프로필 조회")
+    @Test
+    void getCurrentUserBusinessProfile() throws ParseException {
+        // Given
+        User mockCurrentUser = createMockUser();
+        setFieldWithReflection(mockCurrentUser, "email", CURRENT_USER_EMAIL);
+        Business mockCurrentUserBusiness = createMockBusiness(CURRENT_USER_BUSINESS_ID, CURRENT_USER_BUSINESS_NAME);
+        setFieldWithReflection(mockCurrentUserBusiness, "user", mockCurrentUser);
+
+        when(userRepository.findByEmail(CURRENT_USER_EMAIL)).thenReturn(mockCurrentUser);
+        when(businessRepository.findFirstByUser(mockCurrentUser)).thenReturn(Optional.of(mockCurrentUserBusiness));
+
+        // When
+        BusinessDTO result = businessService.getCurrentUserBusinessProfile(CURRENT_USER_EMAIL);
+
+        // Then
+        assertNotNull(result);
+        assertEquals(CURRENT_USER_BUSINESS_ID, result.getId());
+        assertEquals(CURRENT_USER_BUSINESS_NAME, result.getBusinessName());
+        assertEquals(CURRENT_USER_EMAIL, mockCurrentUser.getEmail());
+
+        verify(userRepository, times(1)).findByEmail(CURRENT_USER_EMAIL);
+        verify(businessRepository, times(1)).findFirstByUser(mockCurrentUser);
+    }
+
+    @DisplayName("현재 사용자의 비즈니스 프로필이 없을 경우 예외 발생")
+    @Test
+    void getCurrentUserBusinessProfile_NotFound() {
+        // Given
+        User mockCurrentUser = createMockUser();
+        setFieldWithReflection(mockCurrentUser, "email", CURRENT_USER_EMAIL);
+
+        when(userRepository.findByEmail(CURRENT_USER_EMAIL)).thenReturn(mockCurrentUser);
+        when(businessRepository.findFirstByUser(mockCurrentUser)).thenReturn(Optional.empty());
+
+        // When & Then
+        assertThrows(RuntimeException.class, () -> businessService.getCurrentUserBusinessProfile(CURRENT_USER_EMAIL));
+
+        verify(userRepository, times(1)).findByEmail(CURRENT_USER_EMAIL);
+        verify(businessRepository, times(1)).findFirstByUser(mockCurrentUser);
     }
 }

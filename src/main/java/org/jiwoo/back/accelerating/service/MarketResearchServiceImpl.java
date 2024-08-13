@@ -88,7 +88,7 @@ public class MarketResearchServiceImpl implements MarketResearchService {
                         "예시:\n" +
                         "시장 규모: 약 100억원으로 추정됩니다. 이는 작년 대비 15%% 증가한 수치이며, 주요 기업들의 적극적인 투자로 인해 시장이 확대되고 있습니다.\n" +
                         "성장률: 연간 20%% 성장 중이며, 특히 외국인 투자가 크게 증가하고 있습니다. 향후 5년간 이러한 성장세가 지속될 것으로 전망됩니다.\n\n" +
-                        "만약 정확한 정보를 제공할 수 없다면, 대략적인 추정치나 관련 산업의 통계를 활용하여 설명해주세요. 완전히 알 수 없는 경우에만 '정보 없음'으로 표시해주세요.",
+                        "만약 정확한 정보를 제공할 수 없다면, 대략적인 추정치나 관련 산업의 통계를 활용하여 설명해주세요.",
                 categoryNames,
                 categoryNames,
                 businessDTO.getBusinessScale(),
