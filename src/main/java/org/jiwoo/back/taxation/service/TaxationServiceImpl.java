@@ -72,6 +72,9 @@ public class TaxationServiceImpl implements TaxationService {
     @Autowired
     private VATService vatService;
 
+    @Autowired
+    private AsyncDataSenderService asyncDataSenderService;
+
     public TaxationServiceImpl(UserRepository userRepository, BusinessRepository businessRepository) {
         this.userRepository = userRepository;
         this.businessRepository = businessRepository;
@@ -93,6 +96,40 @@ public class TaxationServiceImpl implements TaxationService {
         return authDTO;
     }
 
+    // 비동기로 데이터를 전송하고 결과를 수신
+    public CompletableFuture<String> sendToPythonServerAsync(String jsonInputString) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                URL url = new URL(pythonServerUrl);
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("POST");
+                conn.setRequestProperty("Content-Type", "application/json; utf-8");
+                conn.setDoOutput(true);
+
+                try (OutputStream os = conn.getOutputStream()) {
+                    byte[] input = jsonInputString.getBytes("utf-8");
+                    os.write(input, 0, input.length);
+                }
+
+                int responseCode = conn.getResponseCode();
+                if (responseCode == HttpURLConnection.HTTP_OK) {
+                    try (BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream(), "utf-8"))) {
+                        StringBuilder responseBuilder = new StringBuilder();
+                        String responseLine;
+                        while ((responseLine = br.readLine()) != null) {
+                            responseBuilder.append(responseLine.trim());
+                        }
+                        return responseBuilder.toString();
+                    }
+                } else {
+                    log.error("파이썬 서버 접속 실패: " + responseCode);
+                    throw new IOException("파이썬 서버 응답 오류: " + responseCode);
+                }
+            } catch (Exception e) {
+                throw new RuntimeException("파이썬 서버 전송 오류", e);
+            }
+        });
+    }
 
     // 세무처리
     @Transactional(readOnly = true)
