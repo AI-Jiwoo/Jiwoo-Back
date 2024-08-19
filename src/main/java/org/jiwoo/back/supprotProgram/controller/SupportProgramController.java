@@ -2,14 +2,12 @@ package org.jiwoo.back.supprotProgram.controller;
 
 import org.jiwoo.back.supprotProgram.aggregate.dto.SupportProgramDTO;
 import org.jiwoo.back.supprotProgram.aggregate.vo.SupportProgramRequestVO;
+import org.jiwoo.back.supprotProgram.aggregate.vo.SupportProgramResponseVO;
 import org.jiwoo.back.supprotProgram.service.SupportProgramService;
 import org.jiwoo.back.user.aggregate.vo.MessageResponseVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -51,5 +49,28 @@ public class SupportProgramController {
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(new MessageResponseVO("[ERROR] 지원 사업 추가 실패"));
         }
+    }
+
+    @GetMapping("/recommend")
+    public ResponseEntity<List<SupportProgramResponseVO>> recommendSupportProgram() {
+
+        List<SupportProgramDTO> supportProgramDTOs = supportProgramService.recommendSupportProgram();
+        List<SupportProgramResponseVO> response = new ArrayList<>();
+
+        for (SupportProgramDTO supportProgramDTO : supportProgramDTOs) {
+            response.add(
+                    SupportProgramResponseVO.builder()
+                            .name(supportProgramDTO.getName())
+                            .target(supportProgramDTO.getTarget())
+                            .scareOfSupport(supportProgramDTO.getScareOfSupport())
+                            .supportContent(supportProgramDTO.getSupportContent())
+                            .supportCharacteristics(supportProgramDTO.getSupportCharacteristics())
+                            .supportInfo(supportProgramDTO.getSupportInfo())
+                            .supportYear(supportProgramDTO.getSupportYear())
+                            .originUrl(supportProgramDTO.getOriginUrl())
+                            .build());
+        }
+
+        return ResponseEntity.ok().body(response);
     }
 }
