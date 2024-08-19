@@ -46,9 +46,13 @@ public class SupportProgram {
     @Column(name = "SUPPORT_YEAR")
     private int supportYear;
 
+    // 지원 사업 URL
+    @Column(name = "ORIGIN_URL")
+    private String originUrl;
+
     @Builder
     public SupportProgram(int id, String name, String target, String scareOfSupport, String supportContent,
-                          String supportCharacteristics, String supportInfo, int supportYear) {
+                          String supportCharacteristics, String supportInfo, int supportYear, String originUrl) {
         this.id = id;
         this.name = name;
         this.target = target;
@@ -57,5 +61,6 @@ public class SupportProgram {
         this.supportCharacteristics = supportCharacteristics;
         this.supportInfo = supportInfo;
         this.supportYear = supportYear;
+        this.originUrl = originUrl;
     }
 }

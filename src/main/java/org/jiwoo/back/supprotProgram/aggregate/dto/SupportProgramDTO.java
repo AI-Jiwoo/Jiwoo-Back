@@ -32,9 +32,12 @@ public class SupportProgramDTO {
     // 사업 년도
     private int supportYear;
 
+    // 지원 사업 URL
+    private String originUrl;
+
     @Builder
     public SupportProgramDTO(int id, String name, String target, String scareOfSupport, String supportContent,
-                             String supportCharacteristics, String supportInfo, int supportYear) {
+                             String supportCharacteristics, String supportInfo, int supportYear, String originUrl) {
         this.id = id;
         this.name = name;
         this.target = target;
@@ -43,5 +46,6 @@ public class SupportProgramDTO {
         this.supportCharacteristics = supportCharacteristics;
         this.supportInfo = supportInfo;
         this.supportYear = supportYear;
+        this.originUrl = originUrl;
     }
 }

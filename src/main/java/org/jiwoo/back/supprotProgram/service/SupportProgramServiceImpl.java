@@ -77,6 +77,7 @@ public class SupportProgramServiceImpl implements SupportProgramService {
                 .supportCharacteristics(dto.getSupportCharacteristics())
                 .supportInfo(dto.getSupportInfo())
                 .supportYear(dto.getSupportYear())
+                .originUrl(dto.getOriginUrl())
                 .build();
     }
 
