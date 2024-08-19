@@ -3,12 +3,15 @@ package org.jiwoo.back.supprotProgram.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.jiwoo.back.business.dto.BusinessDTO;
 import org.jiwoo.back.business.service.BusinessService;
+import org.jiwoo.back.common.exception.NotLoggedInException;
 import org.jiwoo.back.supprotProgram.aggregate.dto.SupportProgramDTO;
 import org.jiwoo.back.supprotProgram.aggregate.entity.SupportProgram;
 import org.jiwoo.back.supprotProgram.aggregate.entity.SupportProgramBusiness;
 import org.jiwoo.back.supprotProgram.repository.SupportProgramBusinessRepository;
 import org.jiwoo.back.supprotProgram.repository.SupportProgramRepository;
+import org.jiwoo.back.user.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,6 +23,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -28,6 +32,7 @@ public class SupportProgramServiceImpl implements SupportProgramService {
     private final SupportProgramRepository supportProgramRepository;
     private final SupportProgramBusinessRepository supportProgramBusinessRepository;
     private final BusinessService businessService;
+    private final AuthService authService;
     private final RestTemplate restTemplate;
 
     @Value("${python.server.url.support}")
@@ -36,11 +41,12 @@ public class SupportProgramServiceImpl implements SupportProgramService {
     @Autowired
     public SupportProgramServiceImpl(SupportProgramRepository supportProgramRepository,
                                      SupportProgramBusinessRepository supportProgramBusinessRepository,
-                                     BusinessService businessService,
+                                     BusinessService businessService, AuthService authService,
                                      @Qualifier("defaultTemplate") RestTemplate restTemplate) {
         this.supportProgramRepository = supportProgramRepository;
         this.supportProgramBusinessRepository = supportProgramBusinessRepository;
         this.businessService = businessService;
+        this.authService = authService;
         this.restTemplate = restTemplate;
     }
 
@@ -64,6 +70,59 @@ public class SupportProgramServiceImpl implements SupportProgramService {
                         .build());
             }
         }
+    }
+
+    @Override
+    public List<SupportProgramDTO> recommendSupportProgram() {
+
+        List<SupportProgramDTO> response = new ArrayList<>();
+
+        try {
+
+            // 현재 로그인 한 유저 이메일
+            String email = authService.getCurrentUser().getEmail();
+
+            List<BusinessDTO> businessList = businessService.findAllBusinessesByUser(email);
+            List<Integer> supportProgramIds = new ArrayList<>();
+
+            for (BusinessDTO business : businessList) {
+
+                List<SupportProgramBusiness> supportProgramBusinessList = supportProgramBusinessRepository.findByBusinessId(business.getId());
+
+                for (SupportProgramBusiness supportProgramBusiness : supportProgramBusinessList) {
+                    supportProgramIds.add(supportProgramBusiness.getSupportProgramId());
+                }
+            }
+
+            // 중복 제거
+            supportProgramIds = supportProgramIds.stream()
+                    .distinct()
+                    .collect(Collectors.toList());
+
+            for (Integer supportProgramId : supportProgramIds) {
+                response.add(entityToDto(supportProgramRepository.findById((int) supportProgramId)));
+            }
+
+        } catch (NotLoggedInException e) {
+            log.error(e.getMessage());
+        }
+
+        return response;
+    }
+
+
+    private SupportProgramDTO entityToDto(SupportProgram supportProgram) {
+        return SupportProgramDTO.builder()
+                .id(supportProgram.getId())
+                .name(supportProgram.getName())
+                .target(supportProgram.getTarget())
+                .scareOfSupport(supportProgram.getScareOfSupport())
+                .supportContent(supportProgram.getSupportContent())
+                .supportCharacteristics(supportProgram.getSupportCharacteristics())
+                .supportInfo(supportProgram.getSupportInfo())
+                .supportYear(supportProgram.getSupportYear())
+                .originUrl(supportProgram.getOriginUrl())
+                .build();
     }
 
 

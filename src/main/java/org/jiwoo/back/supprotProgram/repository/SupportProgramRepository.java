@@ -6,4 +6,6 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface SupportProgramRepository extends JpaRepository<SupportProgram, Integer> {
+
+    SupportProgram findById(int id);
 }

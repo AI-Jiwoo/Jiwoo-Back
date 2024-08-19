@@ -6,4 +6,5 @@ import java.util.List;
 
 public interface SupportProgramService {
     void insertSupportProgram(List<SupportProgramDTO> supportProgramDTO);
+    List<SupportProgramDTO> recommendSupportProgram();
 }
