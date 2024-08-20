@@ -64,6 +64,11 @@ public class BusinessServiceImpl implements BusinessService {
     }
 
     @Override
+    public BusinessDTO findBusinessByName(String name) {
+        return convertToDTO(businessRepository.findByBusinessName(name));
+    }
+
+    @Override
     @Transactional
     public BusinessDTO saveBusiness(BusinessDTO businessDTO, String userEmail) {
         User user = userRepository.findByEmail(userEmail);
