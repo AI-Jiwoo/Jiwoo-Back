@@ -22,6 +22,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
@@ -34,9 +35,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.NoSuchElementException;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -136,10 +135,22 @@ public class TaxationServiceImpl implements TaxationService {
     @Override
     public TaxationResponseDTO getTaxation(List<MultipartFile> transactionFiles,
                                            MultipartFile incomeTaxProof,
+                                           String question1,
+                                           String question2,
+                                           String question3,
+                                           String question4,
+                                           String question5,
                                            int businessId,
                                            String bank) throws Exception {
 
-        TaxationDTO taxationDTO = dataToDTO(transactionFiles, incomeTaxProof, businessId, bank);
+        Map<String, String> questions = new HashMap<>();
+        questions.put("question1", question1);
+        questions.put("question2", question2);
+        questions.put("question3", question3);
+        questions.put("question4", question4);
+        questions.put("question5", question5);
+
+        TaxationDTO taxationDTO = dataToDTO(transactionFiles, incomeTaxProof, questions, businessId, bank);
 
         // Python 서버로 데이터 전송
         String pythonResponse = sendToPythonServer(taxationDTO);
@@ -238,6 +249,7 @@ public class TaxationServiceImpl implements TaxationService {
     @Transactional(readOnly = true, propagation = Propagation.REQUIRES_NEW)
     public TaxationDTO dataToDTO(List<MultipartFile> transactionFiles,
                                  MultipartFile incomeTaxProof,
+                                 Map<String, String> questions,
                                  int businessId,
                                  String bank) throws Exception {
 
@@ -250,6 +262,13 @@ public class TaxationServiceImpl implements TaxationService {
         //소득/세액공제 파일 텍스트화
         FileDTO incomeTaxProofDTO = incomeTaxProofToText(incomeTaxProof);
         taxationDTO.setIncomeTaxProof(incomeTaxProofDTO);
+
+        // 질문 답변
+        taxationDTO.setQuestion1(questions.get("question1"));
+        taxationDTO.setQuestion2(questions.get("question2"));
+        taxationDTO.setQuestion3(questions.get("question3"));
+        taxationDTO.setQuestion4(questions.get("question4"));
+        taxationDTO.setQuestion5(questions.get("question5"));
 
         //사업번호로 사업정보 조회
         BusinessDTO businessDTO = businessService.findBusinessById(businessId);

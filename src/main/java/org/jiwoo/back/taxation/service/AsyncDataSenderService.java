@@ -6,5 +6,5 @@ import java.util.concurrent.CompletableFuture;
 
 public interface AsyncDataSenderService {
 
-    CompletableFuture<Void> sendDataToPythonServer(TaxationDTO taxationDTO);
+    CompletableFuture<String> sendDataToPythonServer(TaxationDTO taxationDTO);
 }

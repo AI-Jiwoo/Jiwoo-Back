@@ -19,9 +19,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -73,6 +71,13 @@ public class TaxationServiceImplTest {
         MultipartFile incomeTaxProof = new MockMultipartFile(
                 "incomeTaxProof", "taxProof.txt", "text/plain", "Sample tax proof data".getBytes());
 
+        Map<String, String> questions = new HashMap<>();
+        questions.put("question1", "");
+        questions.put("question2", "");
+        questions.put("question3", "");
+        questions.put("question4", "");
+        questions.put("question5", "");
+
         BusinessDTO mockBusinessDTO = new BusinessDTO();
         mockBusinessDTO.setBusinessNumber("1");
 
@@ -89,6 +94,7 @@ public class TaxationServiceImplTest {
         TaxationDTO taxationDTO = taxationService.dataToDTO(
                 transactionFiles,
                 incomeTaxProof,
+                questions,
                 1,
                 "기업은행"
         );

@@ -17,6 +17,12 @@ public class TaxationDTO {
     private FileDTO transactionList;  // 거래내역 파일들 (multi)
     private FileDTO incomeTaxProof;   // 소득/세액공제 파일 (one)
 
+    private String question1;           // 질문1에 대한 답변
+    private String question2;           // 질문2에 대한 답변
+    private String question3;           // 질문3에 대한 답변
+    private String question4;           // 질문4에 대한 답변
+    private String question5;           // 질문5에 대한 답변
+
     private String businessId;          // 사업 번호
     private String businessCode;        // 사업자 등록 번호
     private String currentDate;         // 현재 날짜

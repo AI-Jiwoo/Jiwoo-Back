@@ -47,12 +47,18 @@ public class TaxationImplTest {
 
         MultipartFile incomeTaxProofFile = new MockMultipartFile("이진아(950515)-2023년도자료.pdf", Files.readAllBytes(incomeTaxProofFilePath));
 
+        String question1 = "";
+        String question2 = "";
+        String question3 = "";
+        String question4 = "";
+        String question5 = "";
+
         int businessId = 11;
         String bank = "기업은행";
 
 
         //when
-        TaxationResponseDTO response = taxationService.getTaxation(transactionFiles, incomeTaxProofFile, businessId, bank);
+        TaxationResponseDTO response = taxationService.getTaxation(transactionFiles, incomeTaxProofFile, question1, question2, question3, question4, question5, businessId, bank);
 
 
         //then

@@ -52,12 +52,17 @@ public class TaxationController {
     @PostMapping("/")
     public ResponseEntity<TaxationResponseDTO> getTaxation(@RequestParam("transactionFiles") List<MultipartFile> transactionFiles,
                                                            @RequestParam("incomeTaxProof") MultipartFile incomeTaxProof,
+                                                           @RequestParam("question1") String question1,
+                                                           @RequestParam("question2") String question2,
+                                                           @RequestParam("question3") String question3,
+                                                           @RequestParam("question4") String question4,
+                                                           @RequestParam("question5") String question5,
                                                            @RequestParam("businessId") int businessId,
                                                            @RequestParam("bank") String bank) {
 
         try{
 
-            TaxationResponseDTO taxationResponseDTO = taxationService.getTaxation(transactionFiles, incomeTaxProof, businessId, bank);
+            TaxationResponseDTO taxationResponseDTO = taxationService.getTaxation(transactionFiles, incomeTaxProof, question1, question2, question3, question4, question5, businessId, bank);
             return ResponseEntity.ok(taxationResponseDTO);
         }catch(Exception e){
             return ResponseEntity.status(500).body(null);
