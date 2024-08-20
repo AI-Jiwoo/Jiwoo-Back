@@ -11,5 +11,6 @@ import java.util.Optional;
 @Repository
 public interface BusinessRepository extends JpaRepository<Business, Integer> {
     List<Business> findAllByUser(User user);
+    Business findByBusinessName(String name);
     Optional<Object> findFirstByUser(User user);
 }
