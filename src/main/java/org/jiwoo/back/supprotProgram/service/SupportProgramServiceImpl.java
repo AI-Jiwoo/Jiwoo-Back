@@ -64,11 +64,18 @@ public class SupportProgramServiceImpl implements SupportProgramService {
 
                 for (String businessName : similarBusinessesName) {
 
-                    int businessId = businessService.findBusinessByName(businessName).getId();
+                    int businessId;
 
-                    // 해당 기업이 RDBMS에서 삭제된 경우(벡터DB에만 존재하는 경우)
+                    // 해당 기업이 RDBMS에서 찾을 수 없는 경우
+                    try {
+                        businessId = businessService.findBusinessByName(businessName).getId();
+                    } catch (Exception e) {
+                        log.error("[Error]Can Not Find BusinessId: {}", e.getMessage());
+                        log.warn("BusinessName: {}", businessName);
+                        continue;
+                    }
                     if (businessId == 0) {
-                        log.warn("Business not found: {}", businessName);
+                        log.warn("[Error]Can Not Find Business: {}", businessName);
                         continue;
                     }
 
