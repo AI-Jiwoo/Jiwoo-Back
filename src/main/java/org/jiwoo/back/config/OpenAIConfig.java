@@ -1,6 +1,7 @@
 package org.jiwoo.back.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
@@ -17,7 +18,8 @@ public class OpenAIConfig {
     }
 
     @Bean
-    public RestTemplate template() {
+    @Qualifier("openAITemplate")
+    public RestTemplate openAITemplate() {
         RestTemplate restTemplate = new RestTemplate();
         restTemplate.getInterceptors().add((request, body, execution) -> {
             request.getHeaders().add("Authorization", "Bearer " + env.getProperty("open-ai.api-key"));

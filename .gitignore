@@ -178,3 +178,6 @@ hs_err_pid*
 replay_pid*
 
 # End of https://www.toptal.com/developers/gitignore/api/intellij,java
+
+# AWS PEM
+deploy_key.pem
