@@ -66,6 +66,12 @@ public class SupportProgramServiceImpl implements SupportProgramService {
 
                     int businessId = businessService.findBusinessByName(businessName).getId();
 
+                    // 해당 기업이 RDBMS에서 삭제된 경우(벡터DB에만 존재하는 경우)
+                    if (businessId == 0) {
+                        log.warn("Business not found: {}", businessName);
+                        continue;
+                    }
+
                     supportProgramBusinessRepository.save(SupportProgramBusiness.builder()
                             .supportProgramId(supportProgramId)
                             .businessId(businessId)
