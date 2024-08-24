@@ -1,10 +1,16 @@
 package org.jiwoo.back.taxation.service;
 
 import lombok.extern.slf4j.Slf4j;
+import org.jiwoo.back.business.dto.BusinessDTO;
+import org.jiwoo.back.business.service.BusinessService;
+import org.jiwoo.back.taxation.dto.TaxationDTO;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
@@ -26,6 +32,9 @@ public class HomeTaxAPIServiceImpl implements HomeTaxAPIService {
     @Value("${homeTax.api.authorization}")
     private String authorization;
 
+    @Autowired
+    private BusinessService businessService;
+
     @Qualifier("defaultTemplate")
     private final RestTemplate restTemplate;
 
@@ -33,14 +42,44 @@ public class HomeTaxAPIServiceImpl implements HomeTaxAPIService {
         this.restTemplate = restTemplate;
     }
 
+    public TaxationDTO getTaxationInfo(int businessId){
+        TaxationDTO taxationDTO = new TaxationDTO();
+        BusinessDTO businessDTO = new BusinessDTO();
+
+        // 사업 번호로 사업정보 조회
+        businessDTO = getBusinessNumber(businessId);
+        String businessNumber = businessDTO.getBusinessNumber();
+        String businessContent = businessDTO.getBusinessContent();
+
+        // 사업자 등록 번호로 사업자 유형 조회
+        String businessType = getBusinessType(businessNumber);
+
+
+        taxationDTO.setBusinessId(String.valueOf(businessId));
+        taxationDTO.setBusinessContent(businessContent);
+        taxationDTO.setBusinessType(businessType);
+
+        return taxationDTO;
+    }
+
+    @Transactional(readOnly = true, propagation = Propagation.REQUIRES_NEW)
+    public BusinessDTO getBusinessNumber(int businessId){
+        //사업번호로 사업정보 조회
+        BusinessDTO businessDTO = businessService.findBusinessById(businessId);
+
+
+        return businessDTO;
+    }
+
     @Override
-    public String getBusinessType(String businessCode) {
+    public String getBusinessType(String businessNumber) {
+        // 사업자 등록번호로 사업자 유형 API 조회
 
         log.info("\n***** 서비스 잘 들어왔어");
 
         Map<String, Object> requestData = new HashMap<>();
-        requestData.put("b_no", new String[]{businessCode});
-        log.info("\n***** 사업자 등록 번호 : " + businessCode);
+        requestData.put("b_no", new String[]{businessNumber});
+        log.info("\n***** 사업자 등록 번호 : " + businessNumber);
         log.info("\n***** requestData : " + requestData.get("b_no"));
 
         HttpHeaders headers = new HttpHeaders();
