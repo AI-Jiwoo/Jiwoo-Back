@@ -56,18 +56,36 @@ public class SupportProgramServiceImpl implements SupportProgramService {
 
         for (SupportProgramDTO program : supportProgramDTO) {
 
-            SupportProgram supportProgram = supportProgramRepository.save(dtoToEntity(program));
-            int supportProgramId = supportProgram.getId();
-            List<String> similarBusinessesName = findSimilarBusinesses(program);
+            try {
 
-            for (String businessName : similarBusinessesName) {
+                SupportProgram supportProgram = supportProgramRepository.save(dtoToEntity(program));
+                int supportProgramId = supportProgram.getId();
+                List<String> similarBusinessesName = findSimilarBusinesses(program);
 
-                int businessId = businessService.findBusinessByName(businessName).getId();
+                for (String businessName : similarBusinessesName) {
 
-                supportProgramBusinessRepository.save(SupportProgramBusiness.builder()
-                        .supportProgramId(supportProgramId)
-                        .businessId(businessId)
-                        .build());
+                    int businessId;
+
+                    // 해당 기업이 RDBMS에서 찾을 수 없는 경우
+                    try {
+                        businessId = businessService.findBusinessByName(businessName).getId();
+                    } catch (Exception e) {
+                        log.error("[Error]Can Not Find BusinessId: {}", e.getMessage());
+                        log.warn("BusinessName: {}", businessName);
+                        continue;
+                    }
+                    if (businessId == 0) {
+                        log.warn("[Error]Can Not Find Business: {}", businessName);
+                        continue;
+                    }
+
+                    supportProgramBusinessRepository.save(SupportProgramBusiness.builder()
+                            .supportProgramId(supportProgramId)
+                            .businessId(businessId)
+                            .build());
+                }
+            } catch (Exception e) {
+                log.error("[Error]SupportProgram Insert: {}", e.getMessage());
             }
         }
     }
@@ -104,7 +122,7 @@ public class SupportProgramServiceImpl implements SupportProgramService {
             }
 
         } catch (NotLoggedInException e) {
-            log.error(e.getMessage());
+            log.error("[Error]Recommend SupportProgram: {}",e.getMessage());
         }
 
         return response;
