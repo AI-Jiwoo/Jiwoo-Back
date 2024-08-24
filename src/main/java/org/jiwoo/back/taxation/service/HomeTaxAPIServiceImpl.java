@@ -56,6 +56,7 @@ public class HomeTaxAPIServiceImpl implements HomeTaxAPIService {
 
 
         taxationDTO.setBusinessId(String.valueOf(businessId));
+        taxationDTO.setBusinessCode(businessNumber);
         taxationDTO.setBusinessContent(businessContent);
         taxationDTO.setBusinessType(businessType);
 
@@ -66,7 +67,6 @@ public class HomeTaxAPIServiceImpl implements HomeTaxAPIService {
     public BusinessDTO getBusinessNumber(int businessId){
         //사업번호로 사업정보 조회
         BusinessDTO businessDTO = businessService.findBusinessById(businessId);
-
 
         return businessDTO;
     }

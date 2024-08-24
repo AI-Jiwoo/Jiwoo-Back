@@ -23,7 +23,6 @@ public class TaxationController {
     public ResponseEntity<TaxationDTO> getTaxation(@RequestParam("businessId") int businessId) {
 
         try{
-
             TaxationDTO taxationDTO = homeTaxAPIService.getTaxationInfo(businessId);
             return ResponseEntity.ok(taxationDTO);
         }catch(Exception e){
