@@ -56,25 +56,6 @@ dependencies {
 	// Validation
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 
-	// 파일 테스트
-	testImplementation 'org.mockito:mockito-core:5.2.0'
-
-	// File 변환 라이브러리
-	implementation 'org.apache.poi:poi:5.2.3'
-	implementation 'org.apache.poi:poi-ooxml:5.2.3'
-	implementation 'commons-io:commons-io:2.11.0'
-	// PDFBox 라이브러리를 사용할 경우
-	implementation 'org.apache.pdfbox:pdfbox:2.0.27'
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-
-	//Jsoup 라이브러리(홈페이지 크롤링용)
-	implementation 'org.jsoup:jsoup:1.15.3'
-
-	//Jackson 라이브러리(JSON -> DTO)
-	implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.3'
-	implementation 'com.fasterxml.jackson.core:jackson-core:2.13.3'
-	implementation 'com.fasterxml.jackson.core:jackson-annotations:2.13.3'
-
 }
 
 tasks.named('test') {
